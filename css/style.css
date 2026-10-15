@@ -297,6 +297,9 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
 .sb-dash { stroke-dasharray: 2 2; }
 .sb-river { fill: none; stroke: var(--wind); stroke-width: 5; stroke-linecap: round; opacity: 0.45; }
 .sb-canal { fill: none; stroke: var(--wind); stroke-width: 1.6; opacity: 0.6; }
+.sb-city { fill: none; stroke: var(--ink); stroke-width: 0.8; stroke-linejoin: round; }
+.sb-scalebar path { fill: none; stroke: var(--ink); stroke-width: 0.8; }
+.sb-credit { font-size: 4.2px; fill: var(--ink-3); }
 .sb-north path { fill: none; stroke: var(--ink); stroke-width: 0.8; }
 .sb-north polygon { fill: var(--ink); }
 .h1 { fill: color-mix(in srgb, var(--heat) 10%, var(--paper)); }

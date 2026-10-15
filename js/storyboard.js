@@ -9,6 +9,7 @@
 import { CONFIG } from './config.js';
 import { sunPosition, sunVector } from './sun.js';
 import { rectsToOutline, insideRects, deckArea, bounds } from './deckshape.js';
+import { VIENNA } from './vienna.js';
 
 const C30 = Math.cos(Math.PI / 6);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -336,46 +337,89 @@ const SOLAR = (() => {
    ------------------------------------------------------------------------- */
 
 const SKETCHES = {
-  /* S1 — Vienna from above with a heat map, zoom target on Westbahnhof */
+  /* S1 — Vienna from above: real city outline (OSM) with a schematic heat map, zoom target on Westbahnhof */
   heatmap() {
-    const cx = 166, cy = 92, WB = [134, 98];
-    // Danube runs NW → SE, north-east of the centre.
-    const danube = (x) => 8 + (x - 60) * 0.56;
+    const V = VIENNA, S = V.pxPerKm, [cx, cy] = V.centre, WB = V.westbahnhof;
+    const km = (x, y) => [(x - cx) / S, -(y - cy) / S];          // frame → km from Stephansplatz (east, north)
+    const inside = (x, y) => {                                     // point in the city outline (ray casting)
+      let c = false;
+      for (let i = 0, j = V.outline.length - 1; i < V.outline.length; j = i++) {
+        const [xi, yi] = V.outline[i], [xj, yj] = V.outline[j];
+        if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c;
+      }
+      return c;
+    };
+    const distToLines = (x, y, lines) => {
+      let d = Infinity;
+      for (const l of lines) for (let i = 1; i < l.length; i++) {
+        const [ax, ay] = l[i - 1], [bx, by] = l[i];
+        const t = Math.max(0, Math.min(1, ((x - ax) * (bx - ax) + (y - ay) * (by - ay)) / ((bx - ax) ** 2 + (by - ay) ** 2 || 1)));
+        d = Math.min(d, Math.hypot(x - ax - t * (bx - ax), y - ay - t * (by - ay)));
+      }
+      return d / S;                                                // km
+    };
+    const box = (e, n, [e0, n0, e1, n1]) => e > e0 && e < e1 && n > n0 && n < n1;
+    const [wbE, wbN] = km(...WB);
+
+    // Schematic heat (not measured): dense centre and inner west hot, green and water cool.
     let dots = '';
-    for (let y = 14; y <= 172; y += 7) {
-      for (let x = 14; x <= 306; x += 7) {
-        const e = ((x - cx) / 132) ** 2 + ((y - cy) / 78) ** 2;
-        if (e > 1) continue;                                    // city boundary (ellipse)
-        let v = 1 - Math.sqrt(e) * 0.75;                         // denser = hotter towards the centre
-        v += 0.45 * Math.exp(-(((x - WB[0]) ** 2 + (y - WB[1]) ** 2) / 900)); // inner west hot spot
-        if (x < 70) v -= 0.35;                                   // Wienerwald: cooler
-        const dd = Math.abs(y - danube(x));
-        if (dd < 12) v -= 0.4 * (1 - dd / 12);                   // river: cooler
-        v += Math.sin(x * 0.37 + y * 0.21) * 0.08;               // texture
+    for (let y = 8; y <= 172; y += 6) {
+      for (let x = 60; x <= 272; x += 6) {
+        if (!inside(x, y)) continue;
+        const [e, n] = km(x, y);
+        let v = 1 - Math.min(1, Math.hypot(e, n) / 13) * 0.75;               // urban core hottest
+        v += 0.4 * Math.exp(-((e - wbE) ** 2 + (n - wbN) ** 2) / 6);            // dense inner west around Westbahnhof
+        if (e < -7.6 || (n > 3.5 && e < -3.2)) v -= 0.4;                        // Wienerwald and the north-western hills
+        if (box(e, n, [-12, -5.3, -7.6, -2])) v -= 0.25;                        // Lainzer Tiergarten
+        if (box(e, n, [2, -2, 5.7, 0.7])) v -= 0.35;                            // Prater
+        if (box(e, n, [8, -7.6, 14, -3.1])) v -= 0.4;                           // Lobau
+        if (e > 4 && n > 2) v -= 0.12;                                          // looser north-east
+        const w = distToLines(x, y, V.danube);
+        if (w < 1.3) v -= 0.4 * (1 - w / 1.3);                                  // Danube and Donauinsel
+        v += Math.sin(x * 0.37 + y * 0.21) * 0.06;                              // texture
         const k = Math.max(1, Math.min(5, Math.round(v * 5)));
         const d = Math.hypot(x - WB[0], y - WB[1]);
-        dots += `<circle class="h${k}" cx="${x}" cy="${y}" r="2.4" style="--d:${(d * 9).toFixed(0)}ms"/>`;
+        dots += `<circle class="h${k}" cx="${x}" cy="${y}" r="2.1" style="--d:${(d * 9).toFixed(0)}ms"/>`;
       }
     }
+
+    const path = (pts, close) => `M${pts.map((q) => q.map(f).join(',')).join(' L')}${close ? 'Z' : ''}`;
+    // Gürtel: schematic arc through Westbahnhof around the west and south of the centre
+    const rG = Math.hypot(WB[0] - cx, WB[1] - cy), guertel = [];
+    for (let a = -15; a >= -250; a -= 5) {
+      const r = a * Math.PI / 180;
+      guertel.push([cx + Math.sin(r) * rG, cy - Math.cos(r) * rG]);
+    }
+    const [lx, ly] = guertel[Math.round(guertel.length * 0.12)];
+    const dn = V.danube[0][Math.round(V.danube[0].length * 0.3)];
+    const bar = 5 * S;
+
     return `
       <rect class="sb-bg" width="320" height="180"/>
       <g class="sb-heat">${dots}</g>
-      <path class="sb-river" d="M60 8 C 130 40, 190 52, 300 128"/>
-      <path class="sb-canal" d="M150 62 C 168 72, 180 84, 196 104"/>
-      <circle class="sb-line" cx="${cx}" cy="${cy}" r="11"/>
-      <path class="sb-line sb-dash" d="M190 64 A 34 34 0 1 0 196 118"/>
-      <text class="sb-t" x="238" y="74">DONAU</text>
-      <text class="sb-t" x="174" y="140">GÜRTEL</text>
+      <path class="sb-city" d="${path(V.outline, true)}"/>
+      ${V.danube.map((l) => `<path class="sb-river" d="${path(l)}"/>`).join('')}
+      ${V.canal.map((l) => `<path class="sb-canal" d="${path(l)}"/>`).join('')}
+      <circle class="sb-line" cx="${f(cx)}" cy="${f(cy)}" r="${f(0.9 * S)}"/>
+      <path class="sb-line sb-dash" d="${path(guertel)}"/>
+      <text class="sb-t" x="${f(dn[0] + 6)}" y="${f(dn[1] - 4)}">DONAU</text>
+      <text class="sb-t" x="${f(lx - 3)}" y="${f(ly - 2)}" text-anchor="end">GÜRTEL</text>
+      <text class="sb-t sb-t--strong" x="12" y="18">WIEN · VIENNA</text>
       <g class="sb-zoom">
-        <rect x="${WB[0] - 20}" y="${WB[1] - 12}" width="40" height="24"/>
-        <path class="sb-dash" d="M${WB[0] - 20} ${WB[1] - 12} L0 0 M${WB[0] + 20} ${WB[1] - 12} L320 0 M${WB[0] - 20} ${WB[1] + 12} L0 180 M${WB[0] + 20} ${WB[1] + 12} L320 180"/>
+        <rect x="${f(WB[0] - 16)}" y="${f(WB[1] - 10)}" width="32" height="20"/>
+        <path class="sb-dash" d="M${f(WB[0] - 16)} ${f(WB[1] - 10)} L0 0 M${f(WB[0] + 16)} ${f(WB[1] - 10)} L320 0 M${f(WB[0] - 16)} ${f(WB[1] + 10)} L0 180 M${f(WB[0] + 16)} ${f(WB[1] + 10)} L320 180"/>
       </g>
-      <circle class="sb-mark" cx="${WB[0]}" cy="${WB[1]}" r="2.6"/>
-      <text class="sb-t sb-t--strong" x="${WB[0] - 20}" y="${WB[1] + 24}">WESTBAHNHOF</text>
-      <g transform="translate(14 158)">
+      <circle class="sb-mark" cx="${f(WB[0])}" cy="${f(WB[1])}" r="2.4"/>
+      <text class="sb-t sb-t--strong" x="${f(WB[0] - 16)}" y="${f(WB[1] + 18)}">WESTBAHNHOF</text>
+      <g transform="translate(14 150)">
         ${[1, 2, 3, 4, 5].map((k) => `<rect class="h${k}" x="${(k - 1) * 12}" y="0" width="12" height="5"/>`).join('')}
-        <text class="sb-t" x="0" y="15">COOL</text><text class="sb-t" x="60" y="15" text-anchor="end">HOT</text>
+        <text class="sb-t" x="0" y="13">COOL</text><text class="sb-t" x="60" y="13" text-anchor="end">HOT</text>
+        <text class="sb-t" x="0" y="22">HEAT · SCHEMATIC</text>
       </g>
+      <g class="sb-scalebar" transform="translate(${f(306 - bar)} 150)">
+        <path d="M0 0 V4 H${f(bar)} V0"/><text class="sb-t" x="${f(bar)}" y="13" text-anchor="end">5 KM</text>
+      </g>
+      <text class="sb-t sb-credit" x="306" y="172" text-anchor="end">OUTLINE © OPENSTREETMAP CONTRIBUTORS</text>
       <g class="sb-north" transform="translate(300 22)"><path d="M0 8 L0 -8 M-3 -3 L0 -8 L3 -3"/><text class="sb-t" x="0" y="17" text-anchor="middle">N</text></g>`;
   },
 
