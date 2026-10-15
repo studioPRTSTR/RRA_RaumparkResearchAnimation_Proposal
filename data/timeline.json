@@ -1,0 +1,204 @@
+{
+  "start": "2026-10-26",
+  "weeks": 18,
+  "phases": [
+    {
+      "label": "Package 1 · 3-min film S1–S10",
+      "start": "2026-10-28",
+      "end": "2027-01-15"
+    },
+    {
+      "label": "Package 2 · to be defined",
+      "start": "2027-01-18",
+      "end": "2027-02-26"
+    }
+  ],
+  "breaks": [
+    {
+      "label": "Holiday break",
+      "start": "2026-12-21",
+      "end": "2027-01-03"
+    }
+  ],
+  "groups": [
+    {
+      "label": "Package 1 · Set-up",
+      "tasks": [
+        {
+          "label": "Kick-off & brief",
+          "start": "2026-10-28",
+          "end": "2026-11-06",
+          "tone": "neutral"
+        },
+        {
+          "label": "Data & 3D model Westbahnhof",
+          "start": "2026-11-02",
+          "end": "2026-11-20",
+          "tone": "neutral"
+        },
+        {
+          "label": "Storyboard & styleframes",
+          "start": "2026-11-02",
+          "end": "2026-11-13",
+          "tone": "neutral"
+        }
+      ]
+    },
+    {
+      "label": "Package 1 · Animations",
+      "tasks": [
+        {
+          "label": "S1 Vienna from above (heat map)",
+          "start": "2026-11-16",
+          "end": "2026-12-04",
+          "tone": "heat"
+        },
+        {
+          "label": "S2 Westbahnhof sun & shade",
+          "start": "2026-11-16",
+          "end": "2026-12-11",
+          "tone": "sun"
+        },
+        {
+          "label": "S3 Westbahnhof wind",
+          "start": "2026-11-23",
+          "end": "2026-12-18",
+          "tone": "wind"
+        },
+        {
+          "label": "S4 Window & model split screen",
+          "start": "2026-11-30",
+          "end": "2027-01-08",
+          "tone": "sun"
+        },
+        {
+          "label": "S5 Culture",
+          "start": "2026-12-07",
+          "end": "2026-12-18",
+          "tone": "culture"
+        },
+        {
+          "label": "S6 Health & wellbeing",
+          "start": "2026-12-07",
+          "end": "2026-12-18",
+          "tone": "health"
+        },
+        {
+          "label": "S7 Residential",
+          "start": "2026-12-14",
+          "end": "2027-01-08",
+          "tone": "res"
+        },
+        {
+          "label": "S8 Green areas",
+          "start": "2026-12-14",
+          "end": "2027-01-08",
+          "tone": "park"
+        },
+        {
+          "label": "S9 Greenery & solar income",
+          "start": "2026-11-30",
+          "end": "2026-12-18",
+          "tone": "sun"
+        },
+        {
+          "label": "S10 Layers & key figures",
+          "start": "2027-01-04",
+          "end": "2027-01-08",
+          "tone": "park"
+        },
+        {
+          "label": "Render, edit & review copy",
+          "start": "2027-01-04",
+          "end": "2027-01-14",
+          "tone": "neutral"
+        }
+      ]
+    },
+    {
+      "label": "Package 2 · to be defined",
+      "tasks": [
+        {
+          "label": "Proposal for further animations",
+          "start": "2027-01-18",
+          "end": "2027-01-22",
+          "tone": "neutral"
+        },
+        {
+          "label": "Package 2 animations",
+          "start": "2027-01-25",
+          "end": "2027-02-19",
+          "tone": "neutral",
+          "optional": true,
+          "tag": "tbd"
+        },
+        {
+          "label": "Final grade & delivery",
+          "start": "2027-02-22",
+          "end": "2027-02-26",
+          "tone": "neutral"
+        }
+      ]
+    }
+  ],
+  "milestones": [
+    {
+      "label": "Kick-off · first draft of proposal",
+      "date": "2026-10-28"
+    },
+    {
+      "label": "Storyboard & styleframes approved",
+      "date": "2026-11-13"
+    },
+    {
+      "label": "Animatic review (full 3 min)",
+      "date": "2026-12-04"
+    },
+    {
+      "label": "Package 1 review",
+      "date": "2027-01-15"
+    },
+    {
+      "label": "Package 2 scope agreed",
+      "date": "2027-01-22"
+    },
+    {
+      "label": "Final delivery",
+      "date": "2027-02-26"
+    }
+  ],
+  "legend": [
+    {
+      "tone": "heat",
+      "label": "Heat map"
+    },
+    {
+      "tone": "sun",
+      "label": "Sun / solar"
+    },
+    {
+      "tone": "wind",
+      "label": "Wind"
+    },
+    {
+      "tone": "culture",
+      "label": "Culture"
+    },
+    {
+      "tone": "health",
+      "label": "Health & wellbeing"
+    },
+    {
+      "tone": "res",
+      "label": "Residential"
+    },
+    {
+      "tone": "park",
+      "label": "Green / Raumpark"
+    },
+    {
+      "tone": "neutral",
+      "label": "Set-up / production"
+    }
+  ]
+}

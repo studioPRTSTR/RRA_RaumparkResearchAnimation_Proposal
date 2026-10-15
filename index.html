@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Raumpark Vienna — Visualisation</title>
+  <meta name="author" content="Manuel Gruber · _studiogruber">
+  <meta name="description" content="Visualisation proposal for Raumpark Vienna: sun study, wind flow and isometric layers as the core of an animation and infographic package.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="topbar">
+    <div class="wrap topbar__inner">
+      <a class="brand" href="#top"><span class="brand__code">RPV</span><span class="brand__name">Raumpark Vienna</span></a>
+      <nav class="nav" aria-label="Sections">
+        <a href="#model-section"><span>01</span> Model</a>
+        <a href="#storyboard"><span>02</span> Storyboard</a>
+        <a href="#timetable"><span>03</span> Timetable</a>
+      </nav>
+      <button class="btn btn--ghost theme-toggle" id="theme-toggle" type="button"><i aria-hidden="true"></i><span>Dark</span></button>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ================================================================ 01 HERO -->
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="wrap hero__grid" id="model-section">
+        <div class="hero__text">
+          <p class="eyebrow">Visualisation proposal · Animation &amp; infographics</p>
+          <h1 id="hero-title">A second city,<br><em>46 metres</em> up.</h1>
+          <p class="lede">
+            Raumpark Vienna adds an elevated public landscape above the existing block grid.
+            We propose to tell it as one story that zooms from Vienna's heat map down to a single
+            window at Westbahnhof and up onto the deck: sun, wind, everyday light and the new uses, in animation and infographics.
+          </p>
+          <dl class="figures">
+            <div><dt>Deck level</dt><dd>+46<small> m</small></dd></div>
+            <div><dt>Deck surface</dt><dd><span id="fig-deck-area">—</span><small> m²</small></dd></div>
+            <div><dt>Pylons</dt><dd>6</dd></div>
+            <div><dt>Oct 26 – Feb 27</dt><dd>2<small> packages</small></dd></div>
+          </dl>
+          <p class="note">Model geometry is a placeholder (8 × 6 blocks of 60 m, 20 m streets, a branching deck along the streets) until we receive the research team's 3D model.</p>
+          <p class="note byline">Proposal by Manuel Gruber · _studiogruber</p>
+        </div>
+
+        <div class="model" id="model">
+          <div class="model__bar">
+            <div class="tabs" role="tablist" aria-label="Model views">
+              <button role="tab" id="tab-sun" data-mode="sun" aria-controls="panel-sun" aria-selected="true"><i class="dot dot--sun"></i>Sun study</button>
+              <button role="tab" id="tab-wind" data-mode="wind" aria-controls="panel-wind" aria-selected="false" tabindex="-1"><i class="dot dot--wind"></i>Wind flow</button>
+              <button role="tab" id="tab-layers" data-mode="layers" aria-controls="panel-layers" aria-selected="false" tabindex="-1"><i class="dot dot--park"></i>Isometric layers</button>
+            </div>
+            <div class="rec">
+              <label class="sr-only" for="rec-size">Video size</label>
+              <select id="rec-size" class="select select--sm">
+                <option value="1920x1080">1920×1080</option>
+                <option value="1280x720">1280×720</option>
+                <option value="1080x1080">1080×1080</option>
+                <option value="1080x1350">1080×1350</option>
+              </select>
+              <button class="btn btn--rec" id="rec-btn" type="button" aria-pressed="false"><i class="rec-dot" aria-hidden="true"></i><span class="rec-label">Record</span></button>
+            </div>
+          </div>
+
+          <div class="model__stage">
+            <canvas id="model-canvas" tabindex="0" role="img" aria-label="Isometric model"></canvas>
+            <p class="model__hint" aria-hidden="true">Drag or ← → to rotate · double-click to reset</p>
+          </div>
+
+          <!-- Sun study controls -->
+          <div class="panel" role="tabpanel" id="panel-sun" aria-labelledby="tab-sun">
+            <div class="controls">
+              <button class="btn btn--play" id="sun-play" type="button" aria-pressed="false"><i aria-hidden="true"></i><span>Play</span></button>
+              <div class="field field--grow">
+                <label for="sun-time">Time <output id="sun-time-out" for="sun-time"></output></label>
+                <input type="range" id="sun-time" step="5" class="range range--sun">
+              </div>
+              <div class="field">
+                <label for="sun-date">Date</label>
+                <select id="sun-date" class="select"></select>
+              </div>
+            </div>
+            <dl class="readouts">
+              <div><dt>Altitude</dt><dd id="ro-alt">—</dd></div>
+              <div><dt>Azimuth</dt><dd id="ro-az">—</dd></div>
+              <div><dt>Sunrise</dt><dd id="ro-rise">—</dd></div>
+              <div><dt>Sunset</dt><dd id="ro-set">—</dd></div>
+              <div><dt>Deck shadow</dt><dd id="ro-shadow">—</dd></div>
+            </dl>
+            <p class="panel__note">Sun position for 48.21° N, 16.37° E (NOAA equations), local clock time incl. daylight saving.</p>
+          </div>
+
+          <!-- Wind controls -->
+          <div class="panel" role="tabpanel" id="panel-wind" aria-labelledby="tab-wind" hidden>
+            <div class="controls">
+              <button class="btn btn--play" id="wind-play" type="button" aria-pressed="true"><i aria-hidden="true"></i><span>Pause</span></button>
+              <div class="field">
+                <span class="field__label" id="wind-dir-label">Wind from</span>
+                <div class="segmented" role="radiogroup" aria-labelledby="wind-dir-label">
+                  <button type="button" role="radio" data-wind-dir="W" aria-checked="true">W</button>
+                  <button type="button" role="radio" data-wind-dir="NW" aria-checked="false">NW</button>
+                  <button type="button" role="radio" data-wind-dir="SE" aria-checked="false">SE</button>
+                </div>
+              </div>
+              <div class="field field--grow">
+                <label for="wind-speed">Speed @ 10 m <output id="wind-speed-out" for="wind-speed"></output></label>
+                <input type="range" id="wind-speed" min="1" max="15" step="0.5" class="range range--wind">
+              </div>
+              <fieldset class="field checks">
+                <legend class="field__label">Levels</legend>
+                <label class="check"><input type="checkbox" id="wind-street"> Street</label>
+                <label class="check"><input type="checkbox" id="wind-deck"> Deck</label>
+              </fieldset>
+            </div>
+            <dl class="readouts">
+              <div><dt>Street +2 m</dt><dd id="ro-v-street">—</dd></div>
+              <div><dt>Deck +48 m</dt><dd id="ro-v-deck">—</dd></div>
+              <div><dt>Deck vs. street</dt><dd id="ro-v-ratio">—</dd></div>
+            </dl>
+            <p class="panel__note">Schematic flow, not CFD: wind profile (power law, α 0.30), deflection at facades, channelling between blocks, sheltered wakes. Thick trails = accelerated flow.</p>
+          </div>
+
+          <!-- Layers controls -->
+          <div class="panel" role="tabpanel" id="panel-layers" aria-labelledby="tab-layers" hidden>
+            <div class="controls">
+              <button class="btn" id="layers-replay" type="button"><i class="icon-replay" aria-hidden="true"></i><span>Replay</span></button>
+              <div class="field field--grow">
+                <label for="layers-explode">Explode <output id="layers-explode-out" for="layers-explode"></output></label>
+                <input type="range" id="layers-explode" min="0" max="100" value="100" class="range range--park">
+              </div>
+              <fieldset class="field checks">
+                <legend class="field__label">Layers</legend>
+                <label class="check"><input type="checkbox" data-layer="city" checked><i class="sw sw--stone"></i> City</label>
+                <label class="check"><input type="checkbox" data-layer="structure" checked><i class="sw sw--ink"></i> Structure</label>
+                <label class="check"><input type="checkbox" data-layer="deck" checked><i class="sw sw--park"></i> Deck</label>
+                <label class="check"><input type="checkbox" data-layer="programme" checked><i class="sw sw--sun"></i> Programme</label>
+              </fieldset>
+            </div>
+            <p class="panel__note">01 Existing city +0 m · 02 Structure · 03 Raumpark deck +46 m · 04 Programme</p>
+          </div>
+
+          <p class="model__rec-note" id="rec-note" role="status">Record exports the model as video (WebM) for use as an animatic.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================ 02 STORYBOARD -->
+    <section class="section" id="storyboard" aria-labelledby="storyboard-title">
+      <div class="wrap">
+        <header class="section__head reveal">
+          <span class="section__num">02</span>
+          <h2 id="storyboard-title">Storyboard</h2>
+          <p>Package 1: a proposed three-minute story in ten shots, from the whole city down to one window, then up onto the deck: each use in its own shot, and a diagram of greenery and solar income. The sketches are schematic: they show the idea of each shot, not its final look.</p>
+        </header>
+        <div id="storyboard-board" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ================================================================ 03 TIMETABLE -->
+    <section class="section" id="timetable" aria-labelledby="timetable-title">
+      <div class="wrap">
+        <header class="section__head reveal">
+          <span class="section__num">03</span>
+          <h2 id="timetable-title">Timetable</h2>
+          <p>From the kick-off on 28 October 2026 to the end of February 2027, in two packages. Package 1 produces a three-minute film in ten shots (S1–S10) and is reviewed in mid-January. After that review we propose Package 2: further animations, defined together.</p>
+        </header>
+        <div class="gantt-wrap reveal" id="gantt"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="titleblock">
+    <div class="wrap"><div class="titleblock__grid">
+      <div><span>Project</span>Raumpark Vienna</div>
+      <div><span>Sheet</span>Visualisation proposal</div>
+      <div><span>Scope</span>Animation · infographics · video</div>
+      <div><span>Author</span>Manuel Gruber · _studiogruber</div>
+      <div><span>Revision</span>v0.2 · Oct 2026</div>
+      <div><span>Scale</span>n.t.s.</div>
+    </div></div>
+  </footer>
+</body>
+</html>
