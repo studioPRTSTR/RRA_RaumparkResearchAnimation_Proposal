@@ -3,7 +3,7 @@
   "weeks": 18,
   "phases": [
     {
-      "label": "Package 1 · 3-min film S1–S10",
+      "label": "Package 1 · 3-min film S1–S11",
       "start": "2026-10-28",
       "end": "2027-01-15"
     },
@@ -96,13 +96,19 @@
           "tone": "park"
         },
         {
-          "label": "S9 Greenery & solar income",
+          "label": "S9 Circulation",
+          "start": "2026-12-07",
+          "end": "2026-12-18",
+          "tone": "neutral"
+        },
+        {
+          "label": "S10 Greenery & solar income",
           "start": "2026-11-30",
           "end": "2026-12-18",
           "tone": "sun"
         },
         {
-          "label": "S10 Layers & key figures",
+          "label": "S11 Layers & key figures",
           "start": "2027-01-04",
           "end": "2027-01-08",
           "tone": "park"

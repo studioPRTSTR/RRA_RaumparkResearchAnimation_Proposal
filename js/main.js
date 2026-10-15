@@ -1,8 +1,7 @@
 /* ==========================================================================
-   main.js — page bootstrap: theme, storyboard, timetable, model
+   main.js — page bootstrap: theme, storyboard, timetable
    ========================================================================== */
 
-import { initModel } from './scene.js';
 import { initGantt } from './gantt.js';
 import { initStoryboard } from './storyboard.js';
 
@@ -65,7 +64,6 @@ function loadError(el, err) {
 initTheme();
 initNav();
 observeReveals();
-initModel(document.querySelector('#model'));
 const boardEl = document.querySelector('#storyboard-board');
 initStoryboard(boardEl, 'data/storyboard.json').then(() => observeReveals(boardEl)).catch((e) => loadError(boardEl, e));
 const ganttEl = document.querySelector('#gantt');

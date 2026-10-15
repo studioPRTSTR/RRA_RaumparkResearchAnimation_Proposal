@@ -29,7 +29,7 @@
       "sketch": "sun",
       "title": "Westbahnhof: sun & shade",
       "kicker": "Isometric · district scale",
-      "duration": 30,
+      "duration": 25,
       "scale": [
         "district"
       ],
@@ -37,7 +37,6 @@
       "camera": "Fixed isometric, slight orbit · time-lapse 07:00 → 19:00",
       "graphics": "Sun arc · clock · shadow length",
       "data": "Sun position for Vienna (calculated) · 3D model of the area",
-      "view": "sun",
       "transition": "Same camera, new layer"
     },
     {
@@ -46,7 +45,7 @@
       "sketch": "wind",
       "title": "Westbahnhof: wind",
       "kicker": "Isometric · district & street",
-      "duration": 25,
+      "duration": 20,
       "scale": [
         "district",
         "street"
@@ -55,7 +54,6 @@
       "camera": "Same isometric view, gentle push-in to street level",
       "graphics": "Flow arrows · speed labels",
       "data": "CFD results or schematic flow (to decide)",
-      "view": "wind",
       "transition": "Split screen"
     },
     {
@@ -64,7 +62,7 @@
       "sketch": "split",
       "title": "Window & model, side by side",
       "kicker": "Split screen · room & district",
-      "duration": 20,
+      "duration": 15,
       "scale": [
         "room",
         "district"
@@ -85,9 +83,9 @@
       "scale": [
         "district"
       ],
-      "idea": "The whole deck in isometric view. The culture volumes rise out of the deck and light up in their colour, while all other uses stay neutral boxes: pavilions and event space at the western intersection.",
+      "idea": "The whole deck in isometric view, every volume transparent. The culture volumes fade in from transparent to full colour: pavilions and event space at the western intersection.",
       "camera": "Same isometric view of the whole deck, one use in colour, plan in the corner",
-      "graphics": "Use colour · rising volumes · plan",
+      "graphics": "Use colour · volumes fading in · plan",
       "data": "Programme and capacity of the culture zone",
       "transition": "Next zone"
     },
@@ -101,9 +99,9 @@
       "scale": [
         "district"
       ],
-      "idea": "Same view, next use: the health & wellbeing volumes (sport, pool, wellbeing) rise on the eastern platforms.",
+      "idea": "Same view, next use: the health & wellbeing volumes (sport, pool, wellbeing) fade in on the eastern platforms, the rest stays transparent.",
       "camera": "Same isometric view of the whole deck, one use in colour, plan in the corner",
-      "graphics": "Use colour · rising volumes · plan",
+      "graphics": "Use colour · volumes fading in · plan",
       "data": "Programme of the health zone",
       "transition": "Next zone"
     },
@@ -117,9 +115,9 @@
       "scale": [
         "district"
       ],
-      "idea": "Same view: the residential volumes, the tallest boxes on the deck, rise on the central platform and show that people can live up here too.",
+      "idea": "Same view: the residential volumes, the tallest boxes on the deck, fade in on the central platform and show that people can live up here too.",
       "camera": "Same isometric view of the whole deck, one use in colour, plan in the corner",
-      "graphics": "Use colour · rising volumes · plan",
+      "graphics": "Use colour · volumes fading in · plan",
       "data": "Housing type, units and areas",
       "transition": "Next zone"
     },
@@ -133,19 +131,36 @@
       "scale": [
         "district"
       ],
-      "idea": "Same view: low green boxes spread along the arms of the deck as planted areas. It hands over directly to the solar diagram that follows.",
+      "idea": "Same view: the low green volumes fade in along the arms of the deck as planted areas. It hands over directly to the solar diagram that follows.",
       "camera": "Same isometric view of the whole deck, one use in colour, plan in the corner",
-      "graphics": "Use colour · rising volumes · plan",
+      "graphics": "Use colour · volumes fading in · plan",
       "data": "Planting concept, green area in m²",
-      "transition": "Cut to diagram"
+      "transition": "Next: how it connects"
     },
     {
       "code": "S9",
       "tier": "core",
+      "sketch": "circulation",
+      "title": "Circulation",
+      "kicker": "Isometric diagram · routes & access",
+      "duration": 20,
+      "scale": [
+        "district",
+        "street"
+      ],
+      "idea": "A line builds up through the district: it starts on the street, climbs a stair and lift core at one pylon, runs along the deck's arms past each use (health, culture, green areas, housing) and comes back down another core. The cores at every pylon show how each part of the Raumpark connects to the street below.",
+      "camera": "Same isometric view, the route draws itself with a moving point",
+      "graphics": "Route line · stair cores · use nodes",
+      "data": "Access points, stairs / lifts and main routes (from the research team)",
+      "transition": "Cut to diagram"
+    },
+    {
+      "code": "S10",
+      "tier": "core",
       "sketch": "solar",
       "title": "Greenery & solar income",
       "kicker": "Diagram · heat map on the deck",
-      "duration": 20,
+      "duration": 15,
       "scale": [
         "district"
       ],
@@ -156,7 +171,7 @@
       "transition": "Pull back"
     },
     {
-      "code": "S10",
+      "code": "S11",
       "tier": "core",
       "sketch": "layers",
       "title": "Layers & key figures",
@@ -168,8 +183,7 @@
       "idea": "The model separates into its layers (city, structure, deck, use volumes) while the key figures count up. A closing image that also works as a still for print.",
       "camera": "Isometric, layers lift off",
       "graphics": "Layer labels · counters",
-      "data": "Approved key figures",
-      "view": "layers"
+      "data": "Approved key figures"
     }
   ]
 }

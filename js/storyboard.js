@@ -112,16 +112,11 @@ const DISTRICT = (() => {
   return { parcels, hall, deck, pylons, ground: { x0: -18, y0: -18, x1: 318, y1: 238 }, center: [150, 110] };
 })();
 
-/** A Gründerzeit house: walls, floor lines, pitched roof with gable, maybe a chimney. */
+/** A Gründerzeit house, drawn white with outlines: walls, pitched roof with gable, maybe a chimney. */
 function house(P, b) {
   const { x0, y0, x1, y1, z1, ridge, rh } = b;
   const poly = (cls, list) => `<polygon class="${cls}" points="${pts(P, list)}"/>`;
   let s = box(P, b, 'sb-block');
-  let floors = '';
-  for (let z = 4.5; z < z1 - 1; z += 3.4) {
-    floors += `M${P(x0, y0, z).map(f)} L${P(x1, y0, z).map(f)} M${P(x0, y1, z).map(f)} L${P(x0, y0, z).map(f)} `;
-  }
-  s += `<path class="sb-floors" d="${floors}"/>`;
   const zr = z1 + rh;
   if (ridge === 'x') {
     const yc = (y0 + y1) / 2;
@@ -254,7 +249,7 @@ function useBoxes(P, focus, dz = 0) {
   return ALL_USE_BOXES.slice().sort(byDepth).map((b, i) => {
     const lit = focus === 'all' || b.use === focus;
     const svg = box(P, { ...b, z0: b.z0 + dz, z1: b.z1 + dz }, `use-box use-${b.use} ${lit ? 'is-focus' : 'is-muted'}`);
-    return lit && focus !== 'all' ? `<g class="use-rise" style="--d:${(i % 6) * 0.15}s">${svg}</g>` : svg;
+    return lit && focus !== 'all' ? `<g class="use-fade" style="--d:${(i % 6) * 0.2}s">${svg}</g>` : svg;
   }).join('');
 }
 
@@ -469,7 +464,78 @@ const SKETCHES = {
   'use-res': () => useShot('res'),
   'use-green': () => useShot('green'),
 
-  /* S9 — greenery & solar income: heat map of yearly sun on the deck + what to plant / where PV pays */
+  /* S9 — circulation: a route builds up from the street, up a stair core, along the
+     deck past every use and down again; each use lights up as the route reaches it. */
+  circulation() {
+    const P = isoP(122, 190, 0.68);
+    const z = DISTRICT.deck.z1 + 0.4, DUR = 8, DRAW = 0.75;   // line draws in 75 % of the cycle, then holds
+    // route in world metres: [x, y, z] (street → stair up → deck arms → stair down → street)
+    const route = [
+      [230, -14, 0.3], [230, 62, 0.3], [230, 62, z],            // street, then up the stair core at (230, 70)
+      [230, 70, z], [150, 70, z], [70, 70, z],                  // along the southern arm
+      [70, 150, z], [150, 150, z], [230, 150, z],               // western arm, then the northern arm
+      [230, 158, z], [230, 158, 0.3], [230, 236, 0.3],          // down the stair core at (230, 150), out to the street
+    ];
+    const scr = route.map(([x, y, zz]) => P(x, y, zz));
+    const seg = scr.slice(1).map((q, i) => Math.hypot(q[0] - scr[i][0], q[1] - scr[i][1]));
+    const total = seg.reduce((a, b) => a + b, 0);
+    const at = (idx) => seg.slice(0, idx).reduce((a, b) => a + b, 0) / total;   // share of the route up to point idx
+    const d = `M${scr.map((q) => q.map(f).join(',')).join(' L')}`;
+
+    // stair cores at every pylon: a switchback from street to deck, the two used ones stronger
+    const stair = ([px, py], used) => {
+      const p = [];
+      for (let k = 0; k <= 12; k++) p.push(P(px + (k % 2 ? 5 : -5), py - 7, (k / 12) * DISTRICT.deck.z0).map(f).join(','));
+      return `<polyline class="circ-stair${used ? ' is-used' : ''}" points="${p.join(' ')}"/>`;
+    };
+    const used = ['230,70', '230,150'];
+    const stairs = DISTRICT.pylons.map((b) => {
+      const c = [(b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2];
+      return stair(c, used.includes(c.join(',')));
+    }).join('');
+
+    // uses reached along the route: node on the route + label in the use colour
+    const stops = [
+      { use: 'health', label: 'HEALTH', i: 3, dx: 8, dy: -6 },
+      { use: 'culture', label: 'CULTURE', i: 5, dx: -50, dy: -6 },
+      { use: 'green', label: 'GREEN', i: 6, dx: -42, dy: -6 },
+      { use: 'res', label: 'HOUSING', i: 7, dx: 8, dy: -8 },
+    ];
+    const kt = (t) => `0;${t.toFixed(3)};${Math.min(t + 0.02, 0.94).toFixed(3)};0.95;1`;
+    const nodes = stops.map((s) => {
+      const [x, y] = scr[s.i], t = at(s.i) * DRAW;
+      return `<g class="circ-stop use-${s.use}" opacity="0">
+        <animate attributeName="opacity" dur="${DUR}s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="${kt(t)}"/>
+        <circle class="circ-node" cx="${f(x)}" cy="${f(y)}" r="3.4"/>
+        <rect class="use-swatch" x="${f(x + s.dx)}" y="${f(y + s.dy - 5)}" width="5" height="5"/>
+        <text class="sb-t sb-t--strong" x="${f(x + s.dx + 7)}" y="${f(y + s.dy)}">${s.label}</text></g>`;
+    }).join('');
+    const [s0x, s0y] = P(236, 30, 0);
+    const [s1x, s1y] = P(226, 62, 20);
+
+    return `
+      <rect class="sb-bg" width="320" height="180"/>
+      <g class="use-below">${drawCity(P, DISTRICT.pylons)}</g>
+      ${deckSlab(P)}
+      ${useBoxes(P, null)}
+      ${stairs}
+      <path class="circ-trace" d="${d}"/>
+      <path class="circ-route" d="${d}" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100">
+        <animate attributeName="stroke-dashoffset" dur="${DUR}s" repeatCount="indefinite" values="100;0;0" keyTimes="0;${DRAW};1"/>
+      </path>
+      ${nodes}
+      <circle class="circ-head" r="3">
+        <animateMotion dur="${DUR}s" repeatCount="indefinite" path="${d}" keyPoints="0;1;1" keyTimes="0;${DRAW};1" calcMode="linear"/>
+      </circle>
+      <text class="sb-t" x="${f(s0x + 6)}" y="${f(s0y)}">STREET</text>
+      <text class="sb-t" x="${f(s1x - 8)}" y="${f(s1y)}" text-anchor="end">STAIRS · LIFT</text>
+      <g class="use-title">
+        <text class="sb-t sb-t--strong use-title__name" x="12" y="18">CIRCULATION</text>
+        <text class="sb-t" x="12" y="29">STAIR CORES · DECK ROUTE · CONNECTIONS</text>
+      </g>`;
+  },
+
+  /* S10 — greenery & solar income: heat map of yearly sun on the deck + what to plant / where PV pays */
   solar() {
     const P = isoP(78, 190, 0.53);
     const D = DISTRICT, dk = D.deck, z = dk.z1;
@@ -526,7 +592,7 @@ const SKETCHES = {
       </g>`;
   },
 
-  /* S10 — layers lift off, key figures */
+  /* S11 — layers lift off, key figures */
   layers() {
     const P = isoP(118, 160, 0.42);
     const D = DISTRICT;
@@ -634,7 +700,6 @@ function render(el, data) {
           <div><dt>Camera</dt><dd>${esc(s.camera)}</dd></div>
           <div><dt>Data</dt><dd>${esc(s.data)}</dd></div>
         </dl>
-        ${s.view ? `<button type="button" class="btn sb-try" data-view="${s.view}">Try it in the model ↑</button>` : ''}
       </div>
       ${s.transition && i < shots.length - 1 ? `<p class="sb-transition"><span>↓ ${esc(s.transition)}</span></p>` : ''}
     </li>`).join('');
@@ -645,11 +710,6 @@ function render(el, data) {
   el.querySelectorAll('[data-shot]').forEach((b) => b.addEventListener('click', () => {
     document.getElementById(`shot-${b.dataset.shot}`)?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
   }));
-  el.querySelectorAll('[data-view]').forEach((b) => b.addEventListener('click', () => {
-    document.querySelector(`[role="tab"][data-mode="${b.dataset.view}"]`)?.click();
-    document.getElementById('model')?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
-  }));
-
   // Reduced motion: freeze SMIL animations on a representative frame.
   if (reduced) el.querySelectorAll('.sb-frame svg').forEach((svg) => { svg.setCurrentTime?.(5.5); svg.pauseAnimations?.(); });
 
