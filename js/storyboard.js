@@ -1,5 +1,6 @@
 /* ==========================================================================
-   storyboard.js — proposed story as an edit timeline + schematic shot sketches
+   storyboard.js — storyboard player: one big screen, an edit timeline to jump
+   between shots, and the description of the shot on screen
    --------------------------------------------------------------------------
    Content comes from data/storyboard.json. Each shot has a "sketch" key that
    picks one of the SVG generators below. Sketches are deliberately schematic
@@ -8,7 +9,7 @@
 
 import { CONFIG } from './config.js';
 import { sunPosition, sunVector } from './sun.js';
-import { rectsToOutline, insideRects, deckArea, bounds } from './deckshape.js';
+import { rectsToOutline, insideRects, bounds } from './deckshape.js';
 import { VIENNA } from './vienna.js';
 
 const C30 = Math.cos(Math.PI / 6);
@@ -21,7 +22,7 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
    Tiny isometric helpers for the sketches (camera from the south-west)
    ------------------------------------------------------------------------- */
 
-/** Projection: world metres (x east, y north, z up) → SVG coordinates. */
+/** Projection: world metres (x east, y north, z up) → SVG coordinates (true isometric). */
 const isoP = (ox, oy, s) => (x, y, z = 0) => [ox + (x - y) * C30 * s, oy - ((x + y) * 0.5 + z) * s];
 const pts = (P, list) => list.map(([x, y, z]) => P(x, y, z).map(f).join(',')).join(' ');
 
@@ -56,13 +57,15 @@ function slab(P, loops, z0, z1, cls = '') {
     <path class="f-t" fill-rule="evenodd" d="${loopsPath(P, loops, z1)}"/></g>`;
 }
 
-/* A schematic Westbahnhof district: 4 × 3 Gründerzeit perimeter blocks (one house
-   per parcel, varied eave heights, pitched roofs, open courtyards) and the station
-   hall. The proposal is kept as plain boxes: a branching deck on 6 pylons. */
+/* A schematic Westbahnhof district on a straight isometric grid. Its footprint is irregular: a
+   stepped cluster of Gründerzeit perimeter blocks (one house per parcel, varied depths and eave
+   heights, pitched roofs, open courtyards, now and then an inner wing or one large building),
+   the station hall and two parks, on a base plate that follows the blocks. Around it the rest
+   of the city is only hinted at as faint footprints. The proposal stays plain boxes: a branching
+   deck on 6 pylons along the streets. */
 const DISTRICT = (() => {
   let seed = 7;
   const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
-  const DEPTH = 13;                                  // depth of a street-front house
   const split = (len) => {                           // parcel widths along a street front
     const out = [];
     for (let t = 0; t < len;) {
@@ -74,9 +77,9 @@ const DISTRICT = (() => {
     return out;
   };
   const parcels = [];
-  const parcel = (x0, y0, x1, y1, ridge) => {
-    const floors = 4 + Math.floor(rnd() * 3);        // 4–6 storeys
-    const flat = rnd() < 0.12;                       // occasional later infill with a flat roof
+  const parcel = (x0, y0, x1, y1, ridge, floorsMin = 4) => {
+    const floors = floorsMin + Math.floor(rnd() * 3);  // 4–6 storeys
+    const flat = !ridge || rnd() < 0.12;             // occasional later infill with a flat roof
     parcels.push({
       x0, y0, x1, y1, z0: 0,
       z1: +(4.5 + floors * 3.4 + (flat ? 2 : 0)).toFixed(1),
@@ -85,17 +88,51 @@ const DISTRICT = (() => {
       chimney: !flat && rnd() < 0.5,
     });
   };
-  for (let j = 0; j < 3; j++) {
-    for (let i = 0; i < 4; i++) {
-      if (j === 0 && i < 2) continue;                // station hall takes these two plots
-      const bx = i * 80, by = j * 80;
-      split(60).forEach(([a, b]) => parcel(bx + a, by, bx + b, by + DEPTH, 'x'));
-      split(60).forEach(([a, b]) => parcel(bx + a, by + 60 - DEPTH, bx + b, by + 60, 'x'));
-      split(60 - 2 * DEPTH).forEach(([a, b]) => parcel(bx, by + DEPTH + a, bx + DEPTH, by + DEPTH + b, 'y'));
-      split(60 - 2 * DEPTH).forEach(([a, b]) => parcel(bx + 60 - DEPTH, by + DEPTH + a, bx + 60, by + DEPTH + b, 'y'));
+
+  // Blocks on the 80 m grid (block 60 m + street 20 m). The irregular, stepped footprint comes
+  // from which blocks belong to the district: [i, j, kind]
+  const CELLS = [
+    [2, -1], [3, -1, 'park'],
+    [0, 0, 'hall'], [1, 0, 'hall'], [2, 0], [3, 0],
+    [-1, 1], [0, 1], [1, 1], [2, 1], [3, 1],
+    [-1, 2, 'park'], [0, 2], [1, 2], [2, 2], [3, 2],
+    [0, 3], [1, 3], [2, 3],
+  ];
+  const parks = [];
+  for (const [i, j, kind] of CELLS) {
+    const bx = i * 80, by = j * 80;
+    if (kind === 'hall') continue;
+    if (kind === 'park') {
+      const trees = Array.from({ length: 9 }, () => [bx + 8 + rnd() * 44, by + 8 + rnd() * 44, 3 + rnd() * 2.5]);
+      parks.push({ x0: bx, y0: by, x1: bx + 60, y1: by + 60, trees });
+      continue;
+    }
+    if (rnd() < 0.12) {                              // one large later building on the whole block
+      parcel(bx + 4, by + 4, bx + 56, by + 56, null, 6);
+      continue;
+    }
+    const DEPTH = 11 + Math.floor(rnd() * 5);        // 11–15 m deep street fronts
+    const open = rnd() < 0.18 ? Math.floor(rnd() * 2) : -1;   // sometimes one side stays open
+    split(60).forEach(([a, b]) => parcel(bx + a, by, bx + b, by + DEPTH, 'x'));
+    if (open !== 0) split(60).forEach(([a, b]) => parcel(bx + a, by + 60 - DEPTH, bx + b, by + 60, 'x'));
+    split(60 - 2 * DEPTH).forEach(([a, b]) => parcel(bx, by + DEPTH + a, bx + DEPTH, by + DEPTH + b, 'y'));
+    if (open !== 1) split(60 - 2 * DEPTH).forEach(([a, b]) => parcel(bx + 60 - DEPTH, by + DEPTH + a, bx + 60, by + DEPTH + b, 'y'));
+    if (rnd() < 0.35) {                              // an inner wing across the courtyard
+      const y = by + 26 + rnd() * 8;
+      parcel(bx + DEPTH, y, bx + 60 - DEPTH, y + 9, 'x');
     }
   }
   const hall = { x0: 0, y0: 0, x1: 140, y1: 60, z1: 14, hall: true };
+
+  // Base plate: every block plus half the street around it, merged into one stepped outline.
+  const plateRects = CELLS.map(([i, j]) => [i * 80 - 12, j * 80 - 12, i * 80 + 72, j * 80 + 72]);
+  const plate = { rects: plateRects, loops: rectsToOutline(plateRects), ...bounds(plateRects) };
+  // Context: the surrounding city as faint footprints.
+  const inDistrict = new Set(CELLS.map(([i, j]) => `${i},${j}`));
+  const context = [];
+  for (let i = -4; i <= 7; i++) for (let j = -4; j <= 6; j++) {
+    if (!inDistrict.has(`${i},${j}`)) context.push({ x0: i * 80, y0: j * 80, x1: i * 80 + 60, y1: j * 80 + 60 });
+  }
 
   // The Raumpark grows along the streets (x = 70 / 150 / 230, y = 70 / 150):
   // arms over the streets, platforms over the intersections, plug-ins over the blocks.
@@ -107,10 +144,11 @@ const DISTRICT = (() => {
     [96, 84, 120, 104], [186, 96, 214, 122], [162, 40, 186, 58], [256, 170, 276, 188], [100, 160, 118, 188], // plug-ins
   ];
   const loops = rectsToOutline(rects);
+  // Deck height is not fixed yet: the sketches use a neutral height and never label it.
   const deck = { rects, loops, outline: loops[0], z0: 43, z1: 46, ...bounds(rects) };
   const pylons = [[70, 70], [150, 70], [230, 70], [70, 150], [150, 150], [230, 150]]
     .map(([x, y]) => ({ x0: x - 4, y0: y - 4, x1: x + 4, y1: y + 4, z1: 43, pylon: true }));
-  return { parcels, hall, deck, pylons, ground: { x0: -18, y0: -18, x1: 318, y1: 238 }, center: [150, 110] };
+  return { parcels, hall, parks, plate, context, deck, pylons, center: [110, 110] };
 })();
 
 /** A Gründerzeit house, drawn white with outlines: walls, pitched roof with gable, maybe a chimney. */
@@ -148,17 +186,30 @@ function deckSlab(P, dz = 0) {
   return slab(P, d.loops, d.z0 + dz, d.z1 + dz, 'sb-deck');
 }
 
-function districtBase(P, { deck = true, mark = null } = {}) {
-  const D = DISTRICT, g = D.ground;
-  const ground = `<polygon class="sb-ground" points="${pts(P, [[g.x0, g.y0, 0], [g.x1, g.y0, 0], [g.x1, g.y1, 0], [g.x0, g.y1, 0]])}"/>`;
+/** The ground: faint context footprints, the district's stepped base plate and its parks. */
+function groundSvg(P, { context = true } = {}) {
+  const D = DISTRICT;
+  const quad = (b, z = 0) => pts(P, [[b.x0, b.y0, z], [b.x1, b.y0, z], [b.x1, b.y1, z], [b.x0, b.y1, z]]);
+  const contextSvg = D.context.map((b) => `<polygon class="sb-context" points="${quad(b)}"/>`).join('');
+  const parks = D.parks.map((pk) => `<polygon class="sb-park" points="${quad(pk, 0.2)}"/>` + pk.trees
+    .slice().sort((a, b) => (b[0] + b[1]) - (a[0] + a[1]))
+    .map(([x, y, r]) => { const [cx, cy] = P(x, y, r); return `<circle class="sb-tree" cx="${f(cx)}" cy="${f(cy)}" r="${f((r * (P(1, 0)[0] - P(0, 0)[0])) / C30)}"/>`; })
+    .join('')).join('');
+  // district outline: the ground plate flat at street level with one crisp edge
+  const outline = `<path class="sb-ground sb-plate-edge" fill-rule="evenodd" d="${loopsPath(P, D.plate.loops, 0)}"/>`;
+  return `${context ? `<g class="sb-context-g">${contextSvg}</g>` : ''}${outline}${parks}${context ? northArrow(P, 345, -45) : ''}`;
+}
+
+function districtBase(P, { deck = true, mark = null, context = true } = {}) {
+  const D = DISTRICT;
+  const ground = groundSvg(P, { context });
   let city = drawCity(P, D.pylons);
   if (mark) {
     const [x, y, z] = mark;
     const [mx, my] = P(x, y, z);
     city += `<circle class="sb-mark" cx="${f(mx)}" cy="${f(my)}" r="3.2"/><circle class="sb-mark-ring" cx="${f(mx)}" cy="${f(my)}" r="6"/>`;
   }
-  const hallLabel = P(70, 10, 16);
-  return { ground, city, deck: deck ? deckSlab(P) : '', hallLabel };
+  return { ground, city, deck: deck ? deckSlab(P) : '' };
 }
 
 /* The sketch district's grid is turned against true north (like the real streets
@@ -167,30 +218,35 @@ function districtBase(P, { deck = true, mark = null } = {}) {
    and the arc opens up. GRID_TURN is added to every sun azimuth. */
 const GRID_TURN = 120 * Math.PI / 180;
 
-/** Small north arrow pointing to true north in a turned sketch. */
-function northArrow(P, x, y) {
-  const [ax, ay] = P(x, y, 0);
-  const [bx, by] = P(x + Math.sin(GRID_TURN) * 24, y + Math.cos(GRID_TURN) * 24, 0);
-  const a = Math.atan2(by - ay, bx - ax);
-  const head = [[bx, by], [bx - Math.cos(a - 0.5) * 5, by - Math.sin(a - 0.5) * 5], [bx - Math.cos(a + 0.5) * 5, by - Math.sin(a + 0.5) * 5]];
-  return `<g class="sb-north"><path d="M${f(ax)} ${f(ay)} L${f(bx)} ${f(by)}"/><polygon points="${head.map((q) => q.map(f).join(',')).join(' ')}"/>
-    <text class="sb-t" x="${f(bx + Math.cos(a) * 8)}" y="${f(by + Math.sin(a) * 8 + 2)}" text-anchor="middle">N</text></g>`;
+/**
+ * North arrow lying on the ground: a circle (an ellipse in isometric) with one line from its
+ * centre to true north. The sketch grid is turned against true north (GRID_TURN).
+ */
+function northArrow(P, x, y, r = 16) {
+  const ring = [];
+  for (let k = 0; k < 48; k++) {
+    const a = (k / 48) * Math.PI * 2;
+    ring.push(P(x + Math.cos(a) * r, y + Math.sin(a) * r, 0).map(f).join(','));
+  }
+  const [cx, cy] = P(x, y, 0);
+  const [nx, ny] = P(x + Math.sin(GRID_TURN) * r * 1.25, y + Math.cos(GRID_TURN) * r * 1.25, 0);
+  return `<g class="sb-north"><polygon points="${ring.join(' ')}"/><path d="M${f(cx)} ${f(cy)} L${f(nx)} ${f(ny)}"/></g>`;
 }
 
-/** Sun samples for 21 June, 07:00 – 19:00 (real Vienna sun positions). */
-function sunSamples() {
-  const date = CONFIG.sun.dates.find((d) => d.id === 'jun');
+/** Sun samples for one key date, every 30 min while the sun is clearly up (real Vienna sun positions). */
+function sunSamples(dateId = 'jun') {
+  const date = CONFIG.sun.dates.find((d) => d.id === dateId);
   const out = [];
-  for (let h = 7; h <= 19; h += 1) {
-    const p = sunPosition(date.day, h * 60, date.tz, CONFIG.site.latitude, CONFIG.site.longitude);
-    out.push({ h, ...p, v: sunVector(p.altitude, p.azimuth + GRID_TURN) });
+  for (let m = 4 * 60; m <= 21 * 60; m += 30) {
+    const p = sunPosition(date.day, m, date.tz, CONFIG.site.latitude, CONFIG.site.longitude);
+    if (p.altitude > 4 * Math.PI / 180) out.push({ m, ...p, v: sunVector(p.altitude, p.azimuth + GRID_TURN) });
   }
   return out;
 }
 
-/** Animated sun on its arc + the deck's shadow sweeping the ground, in sync. */
-function sunLayer(P, dur, idp) {
-  const D = DISTRICT, S = sunSamples(), R = 150, [cx, cy] = D.center;
+/** Animated sun on its arc + the deck's shadow sweeping the ground, in sync (21 June by default). */
+function sunLayer(P, dur, idp, dateId = 'jun') {
+  const D = DISTRICT, S = sunSamples(dateId), R = 150, [cx, cy] = D.center;
   const sunPts = S.map((s) => P(cx + s.v[0] * R, cy + s.v[1] * R, s.v[2] * R));
   const shadowPolys = S.map((s) => {
     // The deck outline pushed away from the sun onto the ground (length capped for low sun).
@@ -200,7 +256,7 @@ function sunLayer(P, dur, idp) {
   });
   // full day arc (dashed), hour dots
   const arc = [];
-  const date = CONFIG.sun.dates.find((d) => d.id === 'jun');
+  const date = CONFIG.sun.dates.find((d) => d.id === dateId);
   for (let m = 4 * 60; m <= 21 * 60; m += 15) {
     const p = sunPosition(date.day, m, date.tz, CONFIG.site.latitude, CONFIG.site.longitude);
     if (p.altitude <= 0) continue;
@@ -211,11 +267,11 @@ function sunLayer(P, dur, idp) {
   const kt = S.map((_, i) => (i / (S.length - 1)).toFixed(3)).join(';');
   const shadow = `<path class="sb-shadow" fill-rule="evenodd" d="${shadowPolys[0]}">
       <animate id="${idp}-a" attributeName="d" dur="${dur}s" repeatCount="indefinite" keyTimes="${kt}" values="${shadowPolys.join(';')}"/></path>`;
-  const sun = `<polyline class="sb-arc" points="${arc.join(' ')}"/>${ticks}
-    <g class="sb-sun"><circle r="7" class="sb-sun-halo"/><circle r="4"/>
+  const arcSvg = `<polyline class="sb-arc" points="${arc.join(' ')}"/>${ticks}`;
+  const disc = `<g class="sb-sun"><circle r="7" class="sb-sun-halo"/><circle r="4"/>
       <animateMotion dur="${dur}s" repeatCount="indefinite" keyTimes="${kt}" keyPoints="${kt}" calcMode="linear"
         path="M${sunPts.map(([x, y]) => `${f(x)},${f(y)}`).join(' L')}"/></g>`;
-  return { shadow, sun };
+  return { shadow, sun: arcSvg + disc, arc: arcSvg, disc };
 }
 
 /* -------------------------------------------------------------------------
@@ -263,23 +319,17 @@ function locator(focus) {
     `<rect class="use-loc use-${b.use}${b.use === focus ? ' is-focus' : ''}" x="${f((b.x0 - d.x0) * k)}" y="${f((d.y1 - b.y1) * k)}" width="${f((b.x1 - b.x0) * k)}" height="${f((b.y1 - b.y0) * k)}"/>`).join('');
   return `<g transform="translate(258 10)">
     <path class="use-loc-deck" fill-rule="evenodd" d="${outline}"/>${boxes}
-    <text class="sb-t" x="24" y="${f((d.y1 - d.y0) * k + 9)}" text-anchor="middle">PLAN · USE ${USES[focus].n}/4</text></g>`;
+</g>`;
 }
 
 /** One use shot: the same isometric view of the whole deck, one use's boxes in colour. */
 function useShot(focus) {
-  const u = USES[focus];
   const P = isoP(122, 190, 0.68);
   return `
     <rect class="sb-bg" width="320" height="180"/>
     <g class="use-below">${drawCity(P, DISTRICT.pylons)}</g>
     ${deckSlab(P)}
     ${useBoxes(P, focus)}
-    <g class="use-title use-${focus}">
-      <rect class="use-swatch" x="12" y="11" width="7" height="7"/>
-      <text class="sb-t sb-t--strong use-title__name" x="23" y="18">${u.label}</text>
-      <text class="sb-t" x="12" y="29">${u.tags}</text>
-    </g>
     ${locator(focus)}`;
 }
 
@@ -390,9 +440,6 @@ const SKETCHES = {
       const r = a * Math.PI / 180;
       guertel.push([cx + Math.sin(r) * rG, cy - Math.cos(r) * rG]);
     }
-    const [lx, ly] = guertel[Math.round(guertel.length * 0.12)];
-    const dn = V.danube[0][Math.round(V.danube[0].length * 0.3)];
-    const bar = 5 * S;
 
     return `
       <rect class="sb-bg" width="320" height="180"/>
@@ -402,113 +449,201 @@ const SKETCHES = {
       ${V.canal.map((l) => `<path class="sb-canal" d="${path(l)}"/>`).join('')}
       <circle class="sb-line" cx="${f(cx)}" cy="${f(cy)}" r="${f(0.9 * S)}"/>
       <path class="sb-line sb-dash" d="${path(guertel)}"/>
-      <text class="sb-t" x="${f(dn[0] + 6)}" y="${f(dn[1] - 4)}">DONAU</text>
-      <text class="sb-t" x="${f(lx - 3)}" y="${f(ly - 2)}" text-anchor="end">GÜRTEL</text>
-      <text class="sb-t sb-t--strong" x="12" y="18">WIEN · VIENNA</text>
       <g class="sb-zoom">
         <rect x="${f(WB[0] - 16)}" y="${f(WB[1] - 10)}" width="32" height="20"/>
         <path class="sb-dash" d="M${f(WB[0] - 16)} ${f(WB[1] - 10)} L0 0 M${f(WB[0] + 16)} ${f(WB[1] - 10)} L320 0 M${f(WB[0] - 16)} ${f(WB[1] + 10)} L0 180 M${f(WB[0] + 16)} ${f(WB[1] + 10)} L320 180"/>
       </g>
       <circle class="sb-mark" cx="${f(WB[0])}" cy="${f(WB[1])}" r="2.4"/>
-      <text class="sb-t sb-t--strong" x="${f(WB[0] - 16)}" y="${f(WB[1] + 18)}">WESTBAHNHOF</text>
       <g transform="translate(14 150)">
         ${[1, 2, 3, 4, 5].map((k) => `<rect class="h${k}" x="${(k - 1) * 12}" y="0" width="12" height="5"/>`).join('')}
-        <text class="sb-t" x="0" y="13">COOL</text><text class="sb-t" x="60" y="13" text-anchor="end">HOT</text>
-        <text class="sb-t" x="0" y="22">HEAT · SCHEMATIC</text>
       </g>
-      <g class="sb-scalebar" transform="translate(${f(306 - bar)} 150)">
-        <path d="M0 0 V4 H${f(bar)} V0"/><text class="sb-t" x="${f(bar)}" y="13" text-anchor="end">5 KM</text>
-      </g>
-      <text class="sb-t sb-credit" x="306" y="172" text-anchor="end">OUTLINE © OPENSTREETMAP CONTRIBUTORS</text>
-      <g class="sb-north" transform="translate(300 22)"><path d="M0 8 L0 -8 M-3 -3 L0 -8 L3 -3"/><text class="sb-t" x="0" y="17" text-anchor="middle">N</text></g>`;
+      <g class="sb-north"><circle cx="300" cy="24" r="8"/><path d="M300 24 V12"/></g>`;
+  },
+
+  /* S3 — the district's heat without the Raumpark, then with it: a soft blue → red heat map on
+     streets and courtyards; the deck fades in (semi-transparent) and the ground below it cools. */
+  'district-heat'() {
+    const P = isoP(160, 139, 0.39);
+    const D = DISTRICT, g = D.plate, T = 12, CELL = 8;
+    const loop = `dur="${T}s" repeatCount="indefinite"`;
+    const inParcel = (x, y) => D.parcels.some((b) => x > b.x0 && x < b.x1 && y > b.y0 && y < b.y1)
+      || (x > D.hall.x0 && x < D.hall.x1 && y > D.hall.y0 && y < D.hall.y1);
+    const inBlock = (x, y) => ((x % 80) + 80) % 80 < 60 && ((y % 80) + 80) % 80 < 60;  // courtyard, not street
+    const nearDeck = (x, y) => [[10, 0], [-10, 0], [0, 10], [0, -10]].some(([dx, dy]) => insideRects(D.deck.rects, x + dx, y + dy));
+    const step = (v) => Math.max(1, Math.min(7, Math.round(v * 6) + 1));    // 1 = cool blue … 4 = neutral … 7 = warm red
+
+    // Schematic surface heat (not measured): paved streets hottest, courtyards milder;
+    // under the deck and close to it the ground is shaded and cooler.
+    let without = '', withDeck = '';
+    for (let x = g.x0; x < g.x1; x += CELL) {
+      for (let y = g.y0; y < g.y1; y += CELL) {
+        const cx = x + CELL / 2, cy = y + CELL / 2;
+        if (!insideRects(g.rects, cx, cy) || inParcel(cx, cy)) continue;
+        const park = D.parks.some((pk) => cx > pk.x0 && cx < pk.x1 && cy > pk.y0 && cy < pk.y1);
+        let v = park ? 0.12 : inBlock(cx, cy) ? 0.55 : 0.82;                   // park vs. courtyard vs. street
+        if (cy < 70 && cx < 150) v += 0.08;                                     // station forecourt
+        v += Math.sin(cx * 0.21 + cy * 0.13) * 0.06;
+        let w = v;
+        if (insideRects(D.deck.rects, cx, cy)) w -= 0.6;
+        else if (nearDeck(cx, cy)) w -= 0.18;
+        const quad = pts(P, [[x, y, 0], [x + CELL, y, 0], [x + CELL, y + CELL, 0], [x, y + CELL, 0]]);
+        without += `<polygon class="dh dh${step(v)}" points="${quad}"/>`;
+        withDeck += `<polygon class="dh dh${step(w)}" points="${quad}"/>`;
+      }
+    }
+    // without → (deck fades in, heat cross-fades) → with → back; the city is drawn a second time
+    // with the pylons so the houses in front still hide them
+    const fadeIn = `<animate attributeName="opacity" ${loop} values="0;0;1;1;0" keyTimes="0;0.4;0.55;0.95;1"/>`;
+    return `
+      <rect class="sb-bg" width="320" height="180"/>
+      ${groundSvg(P)}
+      <g>${without}</g>
+      <g opacity="0">${fadeIn}${withDeck}</g>
+      ${drawCity(P)}
+      <g opacity="0">${fadeIn}${drawCity(P, D.pylons)}</g>
+      <g class="dh-deck" opacity="0">${fadeIn}${deckSlab(P)}</g>
+      <g transform="translate(14 160)">
+        ${[1, 2, 3, 4, 5, 6, 7].map((k) => `<rect class="dh dh${k}" x="${(k - 1) * 10}" y="0" width="10" height="5"/>`).join('')}
+      </g>`;
   },
 
   /* S2 — Westbahnhof isometric with an animated sun and the deck's shadow */
   sun(id) {
-    const P = isoP(142, 168, 0.5);
+    // Summer (21 June) then winter (21 December), 10 s each. Both day arcs stay visible:
+    // the active season's arc is strong, the other one fades back.
+    const P = isoP(160, 139, 0.39);
     const base = districtBase(P);
-    const { shadow, sun } = sunLayer(P, 10, id);
+    const DAY = 10, loop = `dur="${2 * DAY}s" repeatCount="indefinite"`;
+    const summer = sunLayer(P, DAY, `${id}s`, 'jun');
+    const winter = sunLayer(P, DAY, `${id}w`, 'dec');
+    const on = (first) => `<animate attributeName="opacity" ${loop} values="${first ? '1;1;0;0;1' : '0;0;1;1;0'}" keyTimes="0;0.48;0.5;0.98;1"/>`;
+    const strong = (first) => `<animate attributeName="opacity" ${loop} values="${first ? '1;1;0.25;0.25;1' : '0.25;0.25;1;1;0.25'}" keyTimes="0;0.48;0.5;0.98;1"/>`;
     return `
       <rect class="sb-bg" width="320" height="180"/>
-      ${base.ground}${shadow}${base.city}${base.deck}${sun}
-      <text class="sb-t" x="${f(base.hallLabel[0])}" y="${f(base.hallLabel[1])}" text-anchor="middle">WESTBAHNHOF</text>
-      ${northArrow(P, 300, -8)}
-      <text class="sb-t" x="12" y="18">21 JUN · 07:00 → 19:00</text>
-      <text class="sb-t sb-t--park" x="308" y="18" text-anchor="end">DECK +46 M</text>`;
+      ${base.ground}
+      <g>${on(true)}${summer.shadow}</g>
+      <g opacity="0">${on(false)}${winter.shadow}</g>
+      ${base.city}${base.deck}
+      <g class="sb-season sb-season--summer">${strong(true)}${summer.arc}</g>
+      <g class="sb-season sb-season--winter" opacity="0.25">${strong(false)}${winter.arc}</g>
+      <g>${on(true)}${summer.disc}</g>
+      <g opacity="0">${on(false)}${winter.disc}</g>
+`;
   },
 
-  /* S3 — same view, wind lines at street level and deck level */
+  /* S4 — same view, wind lines at street level and deck level */
   wind() {
-    const P = isoP(142, 168, 0.5);
+    const P = isoP(160, 139, 0.39);
     const base = districtBase(P);
-    const line = (y, z, cls, wob) => {
-      const p = [];
-      for (let x = -18; x <= 318; x += 12) p.push(P(x, y + Math.sin(x * 0.05 + y) * wob, z).map(f).join(','));
-      return `<polyline class="${cls}" points="${p.join(' ')}"/>`;
+    // a wind line, split into pieces wherever it would leave the given area
+    const line = (y, z, cls, wob, from, to, inside) => {
+      const runs = [];
+      let run = [];
+      for (let x = from; x <= to; x += 8) {
+        if (inside(x, y)) run.push(P(x, y + Math.sin(x * 0.05 + y) * wob, z).map(f).join(','));
+        else if (run.length) { runs.push(run); run = []; }
+      }
+      if (run.length) runs.push(run);
+      return runs.filter((r) => r.length > 1).map((r) => `<polyline class="${cls}" points="${r.join(' ')}"/>`).join('');
     };
-    const street = [-9, 70, 150, 229].map((y) => line(y, 1, 'sb-flow', 2)).join('');
-    const deck = [62, 86, 110, 134, 158].map((y) => line(y, 52, 'sb-flow sb-flow--fast', 3)).join('');
+    const onPlate = (x, y) => insideRects(DISTRICT.plate.rects, x, y);
+    const street = [-10, 70, 150, 230].map((y) => line(y, 1, 'sb-flow', 2, -96, 316, onPlate)).join('');
+    const deck = [62, 86, 110, 134, 158].map((y) => line(y, 52, 'sb-flow sb-flow--fast', 3, 20, 300, () => true)).join('');
     const eddies = [[70, 30], [150, 110], [230, 190]].map(([x, y]) => {
       const [ex, ey] = P(x, y, 1);
       return `<ellipse class="sb-eddy" cx="${f(ex)}" cy="${f(ey)}" rx="6" ry="3.5"/>`;
     }).join('');
-    const [ax, ay] = P(-40, 110, 0);
+    const [ax, ay] = P(-125, 110, 0);
     return `
       <rect class="sb-bg" width="320" height="180"/>
       ${base.ground}${street}${eddies}${base.city}${base.deck}${deck}
       <g class="sb-windarrow" transform="translate(${f(ax - 6)} ${f(ay - 4)}) rotate(-30)"><path d="M-14 0 H8 M2 -4 L8 0 L2 4"/></g>
-      <text class="sb-t sb-t--wind" x="12" y="18">FROM W · STREET +2 M ≈ 3 M/S</text>
-      <text class="sb-t sb-t--wind" x="308" y="18" text-anchor="end">DECK +48 M ≈ 8 M/S</text>`;
+`;
   },
 
-  /* S4 — split screen: window view (left) and isometric sun study (right), in sync */
+  /* S5 — overview → the Raumpark turns transparent → push-in on one window → the view out of
+     that window fills the frame, with the isometric sun study as a synced inset bottom right */
   split(id) {
-    const dur = 10;
-    // left: interior with a window; the sun patch on the floor drifts as the sun moves
+    const dur = 10;                 // sun cycle inside the split screen
+    const T = 16;                   // whole sequence, looping
+    const loop = `dur="${T}s" repeatCount="indefinite"`;
+    // ---- steps 1–3: overview, deck fades, push-in on the window
+    const PA = isoP(160, 139, 0.39);
+    const base = districtBase(PA);
+    const WIN = [190, 80, 12];                                   // a window on a Gründerzeit facade below the deck
+    const [wx, wy] = PA(...WIN);
+    const winQuad = pts(PA, [[187.5, 80, 10.5], [192.5, 80, 10.5], [192.5, 80, 13.5], [187.5, 80, 13.5]]);
+    const k = 4.5, tx = 160 - k * wx, ty = 96 - k * wy;          // zoom so the window lands mid-frame
+    const zoomKT = '0;0.3;0.44;0.97;1', zoomKS = '0 0 1 1;.45 0 .2 1;0 0 1 1;0 0 1 1';
+    const overview = `
+      <g class="s4-overview">
+        <animate attributeName="opacity" ${loop} values="1;1;0;0;1" keyTimes="0;0.5;0.56;0.97;1"/>
+        <g><animateTransform attributeName="transform" type="translate" ${loop} values="0 0;0 0;${f(tx)} ${f(ty)};${f(tx)} ${f(ty)};0 0" keyTimes="${zoomKT}" calcMode="spline" keySplines="${zoomKS}"/>
+          <g><animateTransform attributeName="transform" type="scale" ${loop} values="1;1;${k};${k};1" keyTimes="${zoomKT}" calcMode="spline" keySplines="${zoomKS}"/>
+            ${base.ground}${base.city}
+            <g class="s4-deck">
+              <animate attributeName="opacity" ${loop} values="1;1;0.12;0.12;1" keyTimes="0;0.16;0.28;0.97;1"/>
+              ${base.deck}
+            </g>
+            <polygon class="s4-window" points="${winQuad}"/>
+            <circle class="sb-mark-ring" cx="${f(wx)}" cy="${f(wy)}" r="6"/>
+          </g>
+        </g>
+      </g>`;
+
+    // ---- step 4: the window fills the frame, the model sits as an inset bottom right
+    // the sun patch on the floor drifts as the sun moves; the deck's shadow passes the window
     const patch = [
-      '30,180 64,148 112,148 92,180', '60,180 82,148 128,148 120,180', '96,180 100,148 140,148 150,180',
+      '60,180 120,146 210,146 180,180', '120,180 160,146 250,146 235,180', '190,180 200,146 280,146 300,180',
     ];
-    const left = `
-      <rect class="sb-wall" x="0" y="0" width="158" height="180"/>
-      <rect class="sb-sky" x="22" y="18" width="114" height="112"/>
-      <rect class="sb-deck-under" x="22" y="18" width="114" height="20"/>
-      <rect class="sb-deck-edge" x="22" y="36" width="114" height="4"/>
-      <rect class="sb-pylon-flat" x="104" y="40" width="9" height="90"/>
-      <rect class="sb-facade-bg" x="22" y="68" width="114" height="62"/>
-      <g class="sb-facade">${[0, 1, 2, 3].map((r) => [0, 1, 2, 3, 4, 5].map((c) =>
-        `<rect x="${28 + c * 17}" y="${76 + r * 13}" width="9" height="7"/>`).join('')).join('')}</g>
-      <rect class="sb-passing" x="22" y="40" width="40" height="90">
-        <animate attributeName="x" dur="${dur}s" repeatCount="indefinite" values="-40;22;96;150" keyTimes="0;0.35;0.65;1"/>
+    const interior = `
+      <rect class="sb-wall" x="0" y="0" width="320" height="180"/>
+      <rect class="sb-sky" x="50" y="14" width="220" height="124"/>
+      <rect class="sb-deck-under" x="50" y="14" width="220" height="20"/>
+      <rect class="sb-deck-edge" x="50" y="32" width="220" height="4"/>
+      <rect class="sb-facade-bg" x="50" y="66" width="220" height="72"/>
+      <g class="sb-facade">${[0, 1, 2, 3].map((r) => Array.from({ length: 10 }, (_, c) =>
+        `<rect x="${58 + c * 21}" y="${74 + r * 16}" width="11" height="8"/>`).join('')).join('')}</g>
+      <rect class="sb-pylon-flat" x="210" y="36" width="12" height="102"/>
+      <rect class="sb-passing" x="50" y="36" width="70" height="102" clip-path="url(#${id}-win)">
+        <animate attributeName="x" dur="${dur}s" repeatCount="indefinite" values="-60;50;180;290" keyTimes="0;0.35;0.65;1"/>
       </rect>
-      <rect class="sb-window" x="22" y="18" width="114" height="112"/>
-      <path class="sb-mullion" d="M79 18 V130 M22 74 H136"/>
-      <rect class="sb-floor" x="0" y="140" width="158" height="40"/>
+      <rect class="sb-window" x="50" y="14" width="220" height="124"/>
+      <path class="sb-mullion" d="M160 14 V138 M50 74 H270"/>
+      <rect class="sb-floor" x="0" y="146" width="320" height="34"/>
       <polygon class="sb-patch" points="${patch[0]}">
         <animate attributeName="points" dur="${dur}s" repeatCount="indefinite" values="${patch.join(';')};${patch[0]}" keyTimes="0;0.45;0.9;1"/>
       </polygon>
-      <text class="sb-t" x="10" y="12">INSIDE · 3RD FLOOR</text>`;
-    // right: small isometric with the same sun timing and a window marker
-    const P = isoP(220, 150, 0.3);
-    const base = districtBase(P, { mark: [190, 80, 12] });
+`;
+    // inset: small isometric with the same sun timing and the window marked
+    const P = isoP(254, 153, 0.16);
+    const rbase = districtBase(P, { mark: WIN, context: false });
     const { shadow, sun } = sunLayer(P, dur, id);
-    const right = `${base.ground}${shadow}${base.city}${base.deck}${sun}
-      <text class="sb-t" x="308" y="12" text-anchor="end">MODEL · SAME MOMENT</text>`;
+    const inset = `
+      ${rbase.ground}${shadow}${rbase.city}${rbase.deck}${sun}
+`;
+    const splitView = `
+      <g class="s4-split" opacity="0">
+        <animate attributeName="opacity" ${loop} values="0;0;1;1;0" keyTimes="0;0.5;0.56;0.97;1"/>
+        <rect class="sb-bg" width="320" height="180"/>
+        ${interior}
+        ${inset}
+      </g>`;
+
     return `
       <rect class="sb-bg" width="320" height="180"/>
-      <clipPath id="${id}-clip"><rect x="162" y="0" width="158" height="180"/></clipPath>
-      ${left}
-      <g clip-path="url(#${id}-clip)">${right}</g>
-      <line class="sb-split" x1="160" y1="0" x2="160" y2="180"/>
-      <g class="sb-sync"><rect x="146" y="82" width="28" height="16" rx="2"/><text x="160" y="93" text-anchor="middle">SYNC</text></g>`;
+      <clipPath id="${id}-win"><rect x="50" y="14" width="220" height="124"/></clipPath>
+      ${overview}
+      ${splitView}`;
   },
 
-  /* S5–S8 — one shot per use: whole deck, that use's boxes in colour */
+  /* S6–S9 — one shot per use: whole deck, that use's boxes in colour */
   'use-culture': () => useShot('culture'),
   'use-health': () => useShot('health'),
   'use-res': () => useShot('res'),
   'use-green': () => useShot('green'),
 
-  /* S9 — circulation: a route builds up from the street, up a stair core, along the
+  /* S10 — circulation: a route builds up from the street, up a stair core, along the
      deck past every use and down again; each use lights up as the route reaches it. */
   circulation() {
     const P = isoP(122, 190, 0.68);
@@ -538,12 +673,12 @@ const SKETCHES = {
       return stair(c, used.includes(c.join(',')));
     }).join('');
 
-    // uses reached along the route: node on the route + label in the use colour
+    // uses reached along the route: a node in the use colour appears as the line passes
     const stops = [
-      { use: 'health', label: 'HEALTH', i: 3, dx: 8, dy: -6 },
-      { use: 'culture', label: 'CULTURE', i: 5, dx: -50, dy: -6 },
-      { use: 'green', label: 'GREEN', i: 6, dx: -42, dy: -6 },
-      { use: 'res', label: 'HOUSING', i: 7, dx: 8, dy: -8 },
+      { use: 'health', i: 3 },
+      { use: 'culture', i: 5 },
+      { use: 'green', i: 6 },
+      { use: 'res', i: 7 },
     ];
     const kt = (t) => `0;${t.toFixed(3)};${Math.min(t + 0.02, 0.94).toFixed(3)};0.95;1`;
     const nodes = stops.map((s) => {
@@ -551,11 +686,8 @@ const SKETCHES = {
       return `<g class="circ-stop use-${s.use}" opacity="0">
         <animate attributeName="opacity" dur="${DUR}s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="${kt(t)}"/>
         <circle class="circ-node" cx="${f(x)}" cy="${f(y)}" r="3.4"/>
-        <rect class="use-swatch" x="${f(x + s.dx)}" y="${f(y + s.dy - 5)}" width="5" height="5"/>
-        <text class="sb-t sb-t--strong" x="${f(x + s.dx + 7)}" y="${f(y + s.dy)}">${s.label}</text></g>`;
+</g>`;
     }).join('');
-    const [s0x, s0y] = P(236, 30, 0);
-    const [s1x, s1y] = P(226, 62, 20);
 
     return `
       <rect class="sb-bg" width="320" height="180"/>
@@ -571,15 +703,10 @@ const SKETCHES = {
       <circle class="circ-head" r="3">
         <animateMotion dur="${DUR}s" repeatCount="indefinite" path="${d}" keyPoints="0;1;1" keyTimes="0;${DRAW};1" calcMode="linear"/>
       </circle>
-      <text class="sb-t" x="${f(s0x + 6)}" y="${f(s0y)}">STREET</text>
-      <text class="sb-t" x="${f(s1x - 8)}" y="${f(s1y)}" text-anchor="end">STAIRS · LIFT</text>
-      <g class="use-title">
-        <text class="sb-t sb-t--strong use-title__name" x="12" y="18">CIRCULATION</text>
-        <text class="sb-t" x="12" y="29">STAIR CORES · DECK ROUTE · CONNECTIONS</text>
-      </g>`;
+`;
   },
 
-  /* S10 — greenery & solar income: heat map of yearly sun on the deck + what to plant / where PV pays */
+  /* S11 — greenery & solar income: heat map of yearly sun on the deck + what to plant / where PV pays */
   solar() {
     const P = isoP(78, 190, 0.53);
     const D = DISTRICT, dk = D.deck, z = dk.z1;
@@ -614,10 +741,9 @@ const SKETCHES = {
       { cls: 's2', label: 'LOW · SHADE PLANTING', p: share((c) => c.v < LO) },
     ];
     const bars = rows.map((r, i) => `
-      <text class="sb-t" x="0" y="${52 + i * 26}">${r.label}</text>
       <rect class="sol-track" x="0" y="${55 + i * 26}" width="96" height="6"/>
       <rect class="sol ${r.cls} sol-bar" style="--d:${600 + i * 250}ms" x="0" y="${55 + i * 26}" width="${(r.p / 100) * 96}" height="6"/>
-      <text class="sb-t sb-t--strong" x="100" y="${61 + i * 26}">${r.p} %</text>`).join('');
+`).join('');
 
     return `
       <rect class="sb-bg" width="320" height="180"/>
@@ -626,38 +752,44 @@ const SKETCHES = {
       <g class="sol-cells" clip-path="url(#sol-clip)">${cells}</g>
       ${objects}
       <g transform="translate(196 18)">
-        <text class="sb-t sb-t--strong" x="0" y="0">SOLAR INCOME ON THE DECK</text>
-        <text class="sb-t" x="0" y="9">YEARLY SUN, RELATIVE · SCHEMATIC</text>
         ${[1, 2, 3, 4, 5, 6].map((k) => `<rect class="sol s${k}" x="${(k - 1) * 16}" y="16" width="16" height="6"/>`).join('')}
-        <text class="sb-t" x="0" y="31">LOW</text><text class="sb-t" x="96" y="31" text-anchor="end">HIGH</text>
         ${bars}
         <line class="sol-pv" x1="0" y1="${132}" x2="10" y2="${132}"/><line class="sol-pv" x1="0" y1="${135}" x2="10" y2="${135}"/>
-        <text class="sb-t" x="14" y="${136}">PV ON HOUSING ROOFS</text>
       </g>`;
   },
 
-  /* S11 — layers lift off, key figures */
+  /* S12 — layers lift off, key figures */
   layers() {
-    const P = isoP(118, 160, 0.42);
+    const P = isoP(160, 150, 0.3);
     const D = DISTRICT;
     const city = drawCity(P);
     const pyl = D.pylons.map((b) => box(P, b, 'sb-pylon')).join('');
-    const g = D.ground;
-    const ground = `<polygon class="sb-ground" points="${pts(P, [[g.x0, g.y0, 0], [g.x1, g.y0, 0], [g.x1, g.y1, 0], [g.x0, g.y1, 0]])}"/>`;
-    const area = deckArea(D.deck.loops).toLocaleString('en-GB').replace(/,/g, ' ');
+    const ground = groundSvg(P);
     return `
       <rect class="sb-bg" width="320" height="180"/>
       ${ground}${city}
       <g class="sb-lift sb-lift--1">${pyl}</g>
       <g class="sb-lift sb-lift--2">${deckSlab(P)}</g>
       <g class="sb-lift sb-lift--3">${useBoxes(P, 'all')}</g>
-      <g class="sb-figures" transform="translate(236 40)">
-        <text class="sb-num" y="0">+46 m</text><text class="sb-t" y="9">DECK LEVEL</text>
-        <text class="sb-num" y="34">${area} m²</text><text class="sb-t" y="43">DECK SURFACE (SKETCH)</text>
-        <text class="sb-num" y="68">${D.pylons.length}</text><text class="sb-t" y="77">PYLONS</text>
-      </g>`;
+`;
   },
 };
+
+/* -------------------------------------------------------------------------
+   Storyboard strip: each shot reduced to the basic outline of its content
+   inside the frame (Vienna's contour, the district outline, the window …)
+   ------------------------------------------------------------------------- */
+
+function thumb(sketch) {
+  const path = (d) => `<path d="${d}"/>`;
+  const line = (list) => `M${list.map((q) => q.map(f).join(',')).join(' L')}`;
+  let content;
+  if (sketch === 'heatmap') content = path(`${line(VIENNA.outline)}Z`);
+  else if (sketch === 'split') content = path('M50 14 H270 V138 H50 Z M160 14 V138 M50 74 H270');
+  else if (sketch === 'solar') content = path(loopsPath(isoP(78, 190, 0.53), DISTRICT.deck.loops, DISTRICT.deck.z1));
+  else content = path(loopsPath(isoP(160, 139, 0.39), DISTRICT.plate.loops, 0));
+  return `<svg viewBox="0 0 320 180" aria-hidden="true"><rect class="sb-thumb__frame" x="0" y="0" width="320" height="180"/>${content}</svg>`;
+}
 
 /* -------------------------------------------------------------------------
    Rendering
@@ -674,20 +806,19 @@ function render(el, data) {
   let t = 0;
   for (const s of shots) { s.start = t; t += s.duration; }
   const total = t;
-  const core = shots.filter((s) => s.tier !== 'optional').reduce((n, s) => n + s.duration, 0);
   const cols = shots.map((s) => `${s.duration}fr`).join(' ');
   const pct = (x) => (x / total) * 100;
 
-  /* ---- overview: edit timeline with tracks ---- */
+  /* ---- edit timeline with tracks ---- */
   const lane = (cls, fn) => `<div class="sb-lane ${cls}" style="grid-template-columns:${cols}">${shots.map((s, i) =>
-    `<button type="button" class="sb-cell${s.tier === 'optional' ? ' is-optional' : ''}" data-shot="${i}" title="${esc(s.code)} · ${esc(s.title)}">${fn(s)}</button>`).join('')}</div>`;
+    `<button type="button" class="sb-cell${s.tier === 'optional' ? ' is-optional' : ''}" data-shot="${i}" title="Play from ${esc(s.code)} · ${esc(s.title)}">${fn(s)}</button>`).join('')}</div>`;
 
   let ticks = '';
   for (let x = 0; x <= total; x += data.tick) {
     ticks += `<span class="sb-tickmark" style="left:${pct(x)}%">${tc(x)}</span>`;
   }
 
-  // scale track: one step per scale used in a shot (split screen = two parallel lines)
+  // scale track: one step per scale used in a shot (two values = two parallel lines)
   const levels = data.scales;
   const yOf = (name) => 16 + (levels.indexOf(name) / (levels.length - 1)) * 56;
   let scaleLines = '';
@@ -700,90 +831,142 @@ function render(el, data) {
     if (next) scaleLines += `<line class="sb-scale-link" x1="${x1}" x2="${pct(next.start) + 0.6}" y1="${yOf(s.scale[0])}" y2="${yOf(next.scale[0])}"/>`;
   });
 
-  const overview = `
-    <div class="sb-overview">
-      <div class="sb-overview__bar">
-        <button class="btn btn--play" id="sb-play" type="button" aria-pressed="false"><i aria-hidden="true"></i><span>Play</span></button>
-        <span class="sb-timecode" id="sb-tc">00:00</span>
-        <span class="sb-total">Package 1 · ${shots.length} shots · ${tc(total)}${total > core ? ` (optional ${tc(total - core)})` : ''}</span>
-      </div>
-      <div class="sb-scroll">
-        <div class="sb-tracks">
-          <div class="sb-track"><span class="sb-track__label">Time</span><div class="sb-ruler">${ticks}</div></div>
-          <div class="sb-track sb-track--picture"><span class="sb-track__label">Picture</span>
-            ${lane('', (s) => `<b>${esc(s.code)}</b><span>${esc(s.title)}</span>`)}</div>
-          <div class="sb-track sb-track--scale"><span class="sb-track__label">Scale
-              ${levels.map((l) => `<small style="top:${(yOf(l) / 80) * 100}%">${esc(l)}</small>`).join('')}</span>
-            <svg class="sb-scale" viewBox="0 0 100 80" preserveAspectRatio="none" aria-hidden="true">
-              ${levels.map((l) => `<line class="sb-scale-grid" x1="0" x2="100" y1="${yOf(l)}" y2="${yOf(l)}"/>`).join('')}
-              ${scaleLines}
-            </svg></div>
-          <div class="sb-track"><span class="sb-track__label">Graphics</span>${lane('sb-lane--small', (s) => esc(s.graphics))}</div>
-          <div class="sb-track"><span class="sb-track__label">Data</span>${lane('sb-lane--small', (s) => esc(s.data))}</div>
-          <div class="sb-playhead-area" aria-hidden="true"><div class="sb-playhead" id="sb-playhead"></div></div>
+  el.innerHTML = `
+    <div class="sb-player" tabindex="-1">
+      <ol class="sb-strip" aria-label="Storyboard" style="--n:${shots.length}">${shots.map((s, i) => `
+        <li><button type="button" class="sb-thumb" data-shot="${i}" title="Play from ${esc(s.code)} · ${esc(s.title)}">
+          ${thumb(s.sketch)}<span>${esc(s.code)}</span></button></li>`).join('')}
+      </ol>
+      <figure class="sb-frame sb-screen" id="sb-screen">
+        <div class="sb-screen__view" id="sb-view" role="img"></div>
+        <figcaption><span id="sb-cap"></span><span>Sketch · not final look</span></figcaption>
+      </figure>
+
+      <div class="sb-overview">
+        <div class="sb-overview__bar">
+          <button class="btn" id="sb-prev" type="button" aria-label="Previous shot">◂◂</button>
+          <button class="btn btn--play" id="sb-play" type="button" aria-pressed="false"><i aria-hidden="true"></i><span>Play</span></button>
+          <button class="btn" id="sb-next" type="button" aria-label="Next shot">▸▸</button>
+          <span class="sb-timecode"><span id="sb-tc">00:00</span> / ${tc(total)}</span>
+          <span class="sb-total">Package 1 · ${shots.length} shots · click the timeline to jump</span>
+        </div>
+        <div class="sb-scroll">
+          <div class="sb-tracks" id="sb-tracks">
+            <div class="sb-track"><span class="sb-track__label">Time</span><div class="sb-ruler sb-seek">${ticks}</div></div>
+            <div class="sb-track sb-track--picture"><span class="sb-track__label">Picture</span>
+              ${lane('', (s) => `<b>${esc(s.code)}</b><span>${esc(s.title)}</span>`)}</div>
+            <div class="sb-track sb-track--scale"><span class="sb-track__label">Scale
+                ${levels.map((l) => `<small style="top:${(yOf(l) / 80) * 100}%">${esc(l)}</small>`).join('')}</span>
+              <svg class="sb-scale sb-seek" viewBox="0 0 100 80" preserveAspectRatio="none" aria-hidden="true">
+                ${levels.map((l) => `<line class="sb-scale-grid" x1="0" x2="100" y1="${yOf(l)}" y2="${yOf(l)}"/>`).join('')}
+                ${scaleLines}
+              </svg></div>
+            <div class="sb-track"><span class="sb-track__label">Graphics</span>${lane('sb-lane--small', (s) => esc(s.graphics))}</div>
+            <div class="sb-track"><span class="sb-track__label">Data</span>${lane('sb-lane--small', (s) => esc(s.data))}</div>
+            <div class="sb-playhead-area" aria-hidden="true"><div class="sb-playhead" id="sb-playhead"></div></div>
+          </div>
         </div>
       </div>
+
+      <div class="sb-info" id="sb-info" aria-live="polite"></div>
     </div>`;
 
-  /* ---- shot list ---- */
-  const list = shots.map((s, i) => `
-    <li class="sb-shot reveal${s.tier === 'optional' ? ' is-optional' : ''}" id="shot-${i}">
-      <div class="sb-shot__time">
-        <span class="sb-shot__code">${esc(s.code)}</span>
-        <span>${tc(s.start)}</span>
-        <span class="sb-shot__dur">${s.duration} s</span>
+  const $ = (sel) => el.querySelector(sel);
+  const view = $('#sb-view'), screen = $('#sb-screen'), cap = $('#sb-cap'), info = $('#sb-info');
+  const head = $('#sb-playhead'), tcEl = $('#sb-tc'), play = $('#sb-play');
+  const cells = [...el.querySelectorAll('.sb-cell, .sb-thumb')];
+
+  // Sequenced sketches pick the moment that tells the most when motion is reduced (e.g. the window view in S4).
+  const STILL = { split: 12, 'district-heat': 8, sun: 5.5 };
+  let pos = 0, cur = -1, playing = false, last = 0, visible = false, gen = 0;
+  const shotAt = (x) => Math.max(0, shots.findIndex((s) => x >= s.start && x < s.start + s.duration));
+
+  /** Put shot idx on the big screen (a fresh SVG, so its animation starts from the beginning). */
+  const show = (idx) => {
+    if (idx === cur) return;
+    cur = idx;
+    const s = shots[idx], next = shots[idx + 1];
+    view.innerHTML = `<svg class="sb-sketch" viewBox="0 0 320 180" data-sketch="${esc(s.sketch)}" aria-label="Sketch: ${esc(s.title)}">${SKETCHES[s.sketch]?.(`sk${idx}-${++gen}`) ?? ''}</svg>`;
+    const svg = view.querySelector('svg');
+    if (reduced) { svg.setCurrentTime?.(STILL[s.sketch] ?? 5.5); svg.pauseAnimations?.(); }
+    else if (!playing) svg.pauseAnimations?.();
+    view.setAttribute('aria-label', `${s.code}: ${s.title}`);
+    cap.textContent = `${s.code} · ${s.kicker}`;
+    info.innerHTML = `
+      <div class="sb-info__head">
+        <span class="sb-info__code">${esc(s.code)}</span>
+        <div>
+          <h3>${esc(s.title)}</h3>
+          <p class="sb-info__meta">${tc(s.start)} – ${tc(s.start + s.duration)} · ${s.duration} s · ${esc(s.kicker)}</p>
+        </div>
       </div>
-      <figure class="sb-frame">
-        <svg viewBox="0 0 320 180" role="img" aria-label="Sketch: ${esc(s.title)}">${SKETCHES[s.sketch]?.(`sk${i}`) ?? ''}</svg>
-        <figcaption><span>${esc(s.kicker)}</span><span>${s.tier === 'optional' ? 'Optional' : 'Sketch · not final look'}</span></figcaption>
-      </figure>
-      <div class="sb-notes">
-        <h3>${esc(s.title)}</h3>
-        <p>${esc(s.idea)}</p>
-        <dl>
-          <div><dt>Camera</dt><dd>${esc(s.camera)}</dd></div>
-          <div><dt>Data</dt><dd>${esc(s.data)}</dd></div>
-        </dl>
-      </div>
-      ${s.transition && i < shots.length - 1 ? `<p class="sb-transition"><span>↓ ${esc(s.transition)}</span></p>` : ''}
-    </li>`).join('');
+      <p class="sb-info__idea">${esc(s.idea)}</p>
+      <dl class="sb-info__specs">
+        <div><dt>Camera</dt><dd>${esc(s.camera)}</dd></div>
+        <div><dt>Graphics</dt><dd>${esc(s.graphics)}</dd></div>
+        <div><dt>Data</dt><dd>${esc(s.data)}</dd></div>
+        <div><dt>Next</dt><dd>${next ? `${esc(s.transition ?? 'Cut')} → ${esc(next.code)} ${esc(next.title)}` : 'End of Package 1'}</dd></div>
+      </dl>`;
+    cells.forEach((c) => c.classList.toggle('is-active', +c.dataset.shot === idx));
+  };
 
-  el.innerHTML = `${overview}<ol class="sb-shots">${list}</ol>`;
-
-  /* ---- interactions ---- */
-  el.querySelectorAll('[data-shot]').forEach((b) => b.addEventListener('click', () => {
-    document.getElementById(`shot-${b.dataset.shot}`)?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
-  }));
-  // Reduced motion: freeze SMIL animations on a representative frame.
-  if (reduced) el.querySelectorAll('.sb-frame svg').forEach((svg) => { svg.setCurrentTime?.(5.5); svg.pauseAnimations?.(); });
-
-  /* ---- playhead: runs through the edit at 8× speed ---- */
-  const SPEED = 8;
-  const head = el.querySelector('#sb-playhead'), tcEl = el.querySelector('#sb-tc'), play = el.querySelector('#sb-play');
-  const cells = [...el.querySelectorAll('.sb-cell')];
-  let pos = 0, playing = false, last = 0, visible = false;
   const draw = () => {
     head.style.left = `${pct(pos)}%`;
     tcEl.textContent = tc(pos);
-    const idx = shots.findIndex((s) => pos >= s.start && pos < s.start + s.duration);
-    cells.forEach((c) => c.classList.toggle('is-active', +c.dataset.shot === idx));
   };
+
+  const setPlaying = (on) => {
+    playing = on;
+    play.setAttribute('aria-pressed', on);
+    play.querySelector('span').textContent = on ? 'Pause' : 'Play';
+    const svg = view.querySelector('svg');
+    if (!reduced) { if (on) svg?.unpauseAnimations?.(); else svg?.pauseAnimations?.(); }
+    screen.classList.toggle('is-paused', !on);
+  };
+
+  /** Jump to a time; clicking a shot starts it from its beginning. */
+  const seek = (x, { autoplay = true } = {}) => {
+    pos = Math.max(0, Math.min(total - 0.01, x));
+    const idx = shotAt(pos);
+    if (idx !== cur) show(idx);
+    draw();
+    if (autoplay && !reduced) setPlaying(true);
+  };
+
+  cells.forEach((c) => c.addEventListener('click', () => {
+    cur = -1;                                       // restart the shot even if it is already on screen
+    seek(shots[+c.dataset.shot].start);
+  }));
+  el.querySelectorAll('.sb-seek').forEach((n) => n.addEventListener('click', (e) => {
+    const r = $('.sb-playhead-area').getBoundingClientRect();
+    seek(((e.clientX - r.left) / r.width) * total);
+  }));
+  const step = (d) => { cur = -1; seek(shots[Math.max(0, Math.min(shots.length - 1, shotAt(pos) + d))].start); };
+  $('#sb-prev').addEventListener('click', () => step(-1));
+  $('#sb-next').addEventListener('click', () => step(1));
+  play.addEventListener('click', () => setPlaying(!playing));
+  $('.sb-player').addEventListener('keydown', (e) => {
+    if (e.target.closest('button') && e.key === ' ') return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+    else if (e.key === ' ') { e.preventDefault(); setPlaying(!playing); }
+  });
+
+  /* ---- playhead runs in real time; the screen follows it from shot to shot ---- */
   const loop = (now) => {
     if (playing && visible) {
-      pos = (pos + ((now - last) / 1000) * SPEED) % total;
+      pos += (now - last) / 1000;
+      if (pos >= total) pos = 0;
+      const idx = shotAt(pos);
+      if (idx !== cur) show(idx);
       draw();
     }
     last = now;
     requestAnimationFrame(loop);
   };
-  const setPlaying = (on) => {
-    playing = on;
-    play.setAttribute('aria-pressed', on);
-    play.querySelector('span').textContent = on ? 'Pause' : 'Play';
-  };
-  play.addEventListener('click', () => setPlaying(!playing));
-  new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(el.querySelector('.sb-overview'));
-  setPlaying(!reduced);
+  new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { threshold: 0.25 }).observe(screen);
+  show(0);
   draw();
+  setPlaying(!reduced);
   requestAnimationFrame((n) => { last = n; loop(n); });
 }

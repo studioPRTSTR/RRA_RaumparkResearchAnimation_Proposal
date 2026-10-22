@@ -12,7 +12,7 @@
       "tier": "core",
       "sketch": "heatmap",
       "title": "Vienna from above",
-      "kicker": "Aerial · city scale",
+      "kicker": "Aerial · city scale · outline © OpenStreetMap contributors",
       "duration": 15,
       "scale": [
         "city"
@@ -27,25 +27,41 @@
       "code": "S2",
       "tier": "core",
       "sketch": "sun",
-      "title": "Westbahnhof: sun & shade",
+      "title": "Westbahnhof: sun & shade, summer and winter",
       "kicker": "Isometric · district scale",
-      "duration": 25,
+      "duration": 20,
       "scale": [
         "district"
       ],
-      "idea": "The same area as an isometric model: today's Gründerzeit blocks first, then the Raumpark at +46 m: a branching deck that grows along the streets. A summer day runs as a time-lapse while the sun moves along its arc and the deck's shadow sweeps across streets and courtyards.",
-      "camera": "Fixed isometric, slight orbit · time-lapse 07:00 → 19:00",
-      "graphics": "Sun arc · clock · shadow length",
-      "data": "Sun position for Vienna (calculated) · 3D model of the area",
-      "transition": "Same camera, new layer"
+      "idea": "The zoom lands on the district around Westbahnhof as an isometric model, with the Raumpark above it: a branching deck that grows along the streets. Two days run as time-lapses: 21 June, with the sun high on a long arc and a short shadow under the deck, then 21 December, with the sun low on a short arc and the deck's shadow stretching far across streets and courtyards. Both day arcs stay visible, so the difference reads at once.",
+      "camera": "Fixed isometric · time-lapse 21 June, then 21 December",
+      "graphics": "Summer and winter sun arcs · deck shadow",
+      "data": "Sun position for Vienna on 21 June and 21 December (calculated) · 3D model of the area",
+      "transition": "Same camera, heat"
     },
     {
       "code": "S3",
       "tier": "core",
+      "sketch": "district-heat",
+      "title": "Westbahnhof: heat without / with Raumpark",
+      "kicker": "Isometric · district heat comparison",
+      "duration": 15,
+      "scale": [
+        "district"
+      ],
+      "idea": "Same view of the district, now as heat. First without the Raumpark: the paved streets and the station forecourt glow warm red, the courtyards are milder. Then the Raumpark fades in and the heat map shifts: under and around the deck the ground turns cooler blue. Same view, same scale, so the difference reads at a glance.",
+      "camera": "Fixed isometric; without → Raumpark fades in → with",
+      "graphics": "Blue → red heat map · semi-transparent deck",
+      "data": "Surface temperature or heat-stress simulation with and without the deck (to confirm)",
+      "transition": "Same camera, new layer"
+    },
+    {
+      "code": "S4",
+      "tier": "core",
       "sketch": "wind",
       "title": "Westbahnhof: wind",
       "kicker": "Isometric · district & street",
-      "duration": 20,
+      "duration": 15,
       "scale": [
         "district",
         "street"
@@ -57,24 +73,24 @@
       "transition": "Split screen"
     },
     {
-      "code": "S4",
+      "code": "S5",
       "tier": "core",
       "sketch": "split",
       "title": "Window & model, side by side",
-      "kicker": "Split screen · room & district",
-      "duration": 15,
+      "kicker": "Sequence · district to room",
+      "duration": 20,
       "scale": [
-        "room",
-        "district"
+        "district",
+        "room"
       ],
-      "idea": "Left: the view out of a flat's window, with light and shade moving through the room over the day. Right: the isometric sun study with that window marked. Both run in sync, so the abstract model meets everyday experience.",
-      "camera": "Locked-off interior + isometric, synchronised clocks",
-      "graphics": "Split frame · shared clock · window marker",
+      "idea": "Starts on the overview of the district with the Raumpark. The deck turns transparent and the camera pushes in on one window of a Gründerzeit house below it. Then the view out of that window fills the screen, with light and shade moving through the room over the day, while a small isometric sun study in the corner shows the same moment with the window marked. Both run in sync, so the abstract model meets everyday experience.",
+      "camera": "Overview → deck fades to transparent → push-in on one window → full-screen window view with a synced model inset",
+      "graphics": "Transparent deck · window highlight · model inset · shared clock",
       "data": "Same sun data · one reference flat / window",
       "transition": "Up onto the deck"
     },
     {
-      "code": "S5",
+      "code": "S6",
       "tier": "core",
       "sketch": "use-culture",
       "title": "Use: culture",
@@ -90,7 +106,7 @@
       "transition": "Next zone"
     },
     {
-      "code": "S6",
+      "code": "S7",
       "tier": "core",
       "sketch": "use-health",
       "title": "Use: health & wellbeing",
@@ -106,7 +122,7 @@
       "transition": "Next zone"
     },
     {
-      "code": "S7",
+      "code": "S8",
       "tier": "core",
       "sketch": "use-res",
       "title": "Use: residential",
@@ -122,7 +138,7 @@
       "transition": "Next zone"
     },
     {
-      "code": "S8",
+      "code": "S9",
       "tier": "core",
       "sketch": "use-green",
       "title": "Use: green areas",
@@ -138,12 +154,12 @@
       "transition": "Next: how it connects"
     },
     {
-      "code": "S9",
+      "code": "S10",
       "tier": "core",
       "sketch": "circulation",
       "title": "Circulation",
       "kicker": "Isometric diagram · routes & access",
-      "duration": 20,
+      "duration": 15,
       "scale": [
         "district",
         "street"
@@ -155,12 +171,12 @@
       "transition": "Cut to diagram"
     },
     {
-      "code": "S10",
+      "code": "S11",
       "tier": "core",
       "sketch": "solar",
       "title": "Greenery & solar income",
       "kicker": "Diagram · heat map on the deck",
-      "duration": 15,
+      "duration": 10,
       "scale": [
         "district"
       ],
@@ -171,7 +187,7 @@
       "transition": "Pull back"
     },
     {
-      "code": "S11",
+      "code": "S12",
       "tier": "core",
       "sketch": "layers",
       "title": "Layers & key figures",

@@ -3,7 +3,7 @@
   "weeks": 18,
   "phases": [
     {
-      "label": "Package 1 · 3-min film S1–S11",
+      "label": "Package 1 · 3-min film S1–S12",
       "start": "2026-10-28",
       "end": "2027-01-15"
     },
@@ -54,61 +54,67 @@
           "tone": "heat"
         },
         {
-          "label": "S2 Westbahnhof sun & shade",
+          "label": "S2 Westbahnhof sun & shade (summer / winter)",
           "start": "2026-11-16",
           "end": "2026-12-11",
           "tone": "sun"
         },
         {
-          "label": "S3 Westbahnhof wind",
+          "label": "S3 Westbahnhof heat: without / with",
+          "start": "2026-11-16",
+          "end": "2026-12-04",
+          "tone": "heat"
+        },
+        {
+          "label": "S4 Westbahnhof wind",
           "start": "2026-11-23",
           "end": "2026-12-18",
           "tone": "wind"
         },
         {
-          "label": "S4 Window & model split screen",
+          "label": "S5 Window & model split screen",
           "start": "2026-11-30",
           "end": "2027-01-08",
           "tone": "sun"
         },
         {
-          "label": "S5 Culture",
+          "label": "S6 Culture",
           "start": "2026-12-07",
           "end": "2026-12-18",
           "tone": "culture"
         },
         {
-          "label": "S6 Health & wellbeing",
+          "label": "S7 Health & wellbeing",
           "start": "2026-12-07",
           "end": "2026-12-18",
           "tone": "health"
         },
         {
-          "label": "S7 Residential",
+          "label": "S8 Residential",
           "start": "2026-12-14",
           "end": "2027-01-08",
           "tone": "res"
         },
         {
-          "label": "S8 Green areas",
+          "label": "S9 Green areas",
           "start": "2026-12-14",
           "end": "2027-01-08",
           "tone": "park"
         },
         {
-          "label": "S9 Circulation",
+          "label": "S10 Circulation",
           "start": "2026-12-07",
           "end": "2026-12-18",
           "tone": "neutral"
         },
         {
-          "label": "S10 Greenery & solar income",
+          "label": "S11 Greenery & solar income",
           "start": "2026-11-30",
           "end": "2026-12-18",
           "tone": "sun"
         },
         {
-          "label": "S11 Layers & key figures",
+          "label": "S12 Layers & key figures",
           "start": "2027-01-04",
           "end": "2027-01-08",
           "tone": "park"
