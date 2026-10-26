@@ -26,13 +26,54 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isoP = (ox, oy, s) => (x, y, z = 0) => [ox + (x - y) * C30 * s, oy - ((x + y) * 0.5 + z) * s];
 const pts = (P, list) => list.map(([x, y, z]) => P(x, y, z).map(f).join(',')).join(' ');
 
+/* Solids are drawn in the line style of the Hairline figures (js/hairline/): a rounded footprint,
+   one filled silhouette (the hull of its base and top rings) with no vertical corner lines, the
+   top face as a fill only, and one dim crease along the top's near edges. Colour stays in the
+   fills: f-s (sides) and f-t (top); k-sil is the silhouette's stroke, k-cr the crease's. */
+
+/** A rounded rectangle as a ring of samples {x, y, nx, ny}, counter-clockwise. */
+function ringPts(x0, y0, x1, y1, r, n = 3) {
+  r = Math.max(0, Math.min(r, (x1 - x0) / 2, (y1 - y0) / 2));
+  const out = [];
+  for (const [cx, cy, a0] of [[x1 - r, y0 + r, -0.5], [x1 - r, y1 - r, 0], [x0 + r, y1 - r, 0.5], [x0 + r, y0 + r, 1]]) {
+    for (let k = 0; k <= n; k++) {
+      const a = (a0 + k / n / 2) * Math.PI;
+      out.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r, nx: Math.cos(a), ny: Math.sin(a) });
+    }
+  }
+  return out;
+}
+
+/** The samples that face the south-west camera, as one run in ring order. */
+function frontRun(ring) {
+  const fr = (q) => -q.nx - q.ny > 1e-6, n = ring.length;
+  const s = ring.findIndex((q, i) => fr(q) && !fr(ring[(i - 1 + n) % n]));
+  const out = [];
+  for (let i = s; out.length < n && fr(ring[i % n]); i++) out.push(ring[i % n]);
+  return out;
+}
+
+/** Convex hull of screen points (monotone chain). */
+function hull(ps) {
+  const p = ps.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const half = (list) => {
+    const h = [];
+    for (const q of list) { while (h.length > 1 && cross(h[h.length - 2], h[h.length - 1], q) <= 0) h.pop(); h.push(q); }
+    return h.slice(0, -1);
+  };
+  return half(p).concat(half(p.reverse()));
+}
+const dPath = (ps, close = true) => `M${ps.map((q) => q.map(f).join(',')).join(' L')}${close ? 'Z' : ''}`;
+
 function box(P, b, cls = '') {
   const { x0, y0, x1, y1, z0 = 0, z1 } = b;
-  return `<g class="${cls}">
-    <polygon class="f-w" points="${pts(P, [[x0, y1, z0], [x0, y0, z0], [x0, y0, z1], [x0, y1, z1]])}"/>
-    <polygon class="f-s" points="${pts(P, [[x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1]])}"/>
-    <polygon class="f-t" points="${pts(P, [[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]])}"/>
-  </g>`;
+  const w = Math.min(x1 - x0, y1 - y0), r = Math.min(2.5, w / 4), ins = Math.min(0.9, w / 6);
+  const ring = ringPts(x0, y0, x1, y1, r);
+  const sil = dPath(hull(ring.flatMap((q) => [P(q.x, q.y, z0), P(q.x, q.y, z1)])));
+  const top = dPath(ring.map((q) => P(q.x, q.y, z1)));
+  const crease = dPath(frontRun(ringPts(x0 + ins, y0 + ins, x1 - ins, y1 - ins, r - ins)).map((q) => P(q.x, q.y, z1)), false);
+  return `<g class="${cls}"><path class="f-s" d="${sil}"/><path class="f-t" d="${top}"/><path class="k-sil nf" d="${sil}"/><path class="k-cr nf" d="${crease}"/></g>`;
 }
 
 /** SVG path for several loops (outline + holes), to be filled with fill-rule evenodd. */
@@ -40,21 +81,13 @@ const loopsPath = (P, loops, z, dx = 0, dy = 0) =>
   loops.map((l) => `M${l.map(([x, y]) => P(x + dx, y + dy, z).map(f).join(',')).join(' L')}Z`).join(' ');
 
 /**
- * A slab extruded from outline loops (outer outline + holes; the deck is always
- * on the left of each loop): the side faces that face the camera, far → near,
- * then the top surface with its openings.
+ * A thin slab from outline loops (outer outline + holes), drawn as the Hairline figures draw a
+ * plate: its underside as a second outline for the thickness (dim), then the top surface with
+ * its openings and the silhouette stroke.
  */
 function slab(P, loops, z0, z1, cls = '') {
-  const faces = [];
-  for (const loop of loops) for (let i = 0; i < loop.length; i++) {
-    const [ax, ay] = loop[i], [bx, by] = loop[(i + 1) % loop.length];
-    const nx = by - ay, ny = ax - bx;             // outward normal of a CCW edge
-    if (-nx - ny <= 0) continue;                  // faces away from the south-west camera
-    faces.push({ d: ax + bx + ay + by, cls: ny < 0 ? 'f-s' : 'f-w', p: [[ax, ay, z0], [bx, by, z0], [bx, by, z1], [ax, ay, z1]] });
-  }
-  faces.sort((a, b) => b.d - a.d);
-  return `<g class="${cls}">${faces.map((fc) => `<polygon class="${fc.cls}" points="${pts(P, fc.p)}"/>`).join('')}
-    <path class="f-t" fill-rule="evenodd" d="${loopsPath(P, loops, z1)}"/></g>`;
+  return `<g class="${cls}"><path class="f-s k-cr" fill-rule="evenodd" d="${loopsPath(P, loops, z0)}"/>
+    <path class="f-t k-sil" fill-rule="evenodd" d="${loopsPath(P, loops, z1)}"/></g>`;
 }
 
 /* A schematic Westbahnhof district on a straight isometric grid. Its footprint is irregular: a
@@ -151,25 +184,36 @@ const DISTRICT = (() => {
   return { parcels, hall, parks, plate, context, deck, pylons, center: [110, 110] };
 })();
 
-/** A Gründerzeit house, drawn white with outlines: walls, pitched roof with gable, maybe a chimney. */
+/**
+ * A Gründerzeit house in the same line style: walls and pitched roof are one convex solid, so one
+ * silhouette; the roof planes and the gable are fills only; one dim crease runs along the eave,
+ * up the gable and along the ridge. Maybe a chimney.
+ */
 function house(P, b) {
-  const { x0, y0, x1, y1, z1, ridge, rh } = b;
+  const { x0, y0, x1, y1, z0 = 0, z1, ridge, rh } = b;
+  if (!ridge) return box(P, b, 'sb-block');
   const poly = (cls, list) => `<polygon class="${cls}" points="${pts(P, list)}"/>`;
-  let s = box(P, b, 'sb-block');
-  const zr = z1 + rh;
+  const zr = z1 + rh, xc = (x0 + x1) / 2, yc = (y0 + y1) / 2;
+  const R = ridge === 'x' ? [[x0, yc, zr], [x1, yc, zr]] : [[xc, y0, zr], [xc, y1, zr]];
+  const corners = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]].flatMap(([x, y]) => [P(x, y, z0), P(x, y, z1)]);
+  const sil = dPath(hull([...corners, ...R.map((q) => P(...q))]));
+  let s = `<g class="sb-block"><path class="f-s" d="${sil}"/>`;
+  let crease, chimney = null;
   if (ridge === 'x') {
-    const yc = (y0 + y1) / 2;
     s += poly('sb-roof r-back', [[x0, yc, zr], [x1, yc, zr], [x1, y1, z1], [x0, y1, z1]])
       + poly('sb-roof r-front', [[x0, y0, z1], [x1, y0, z1], [x1, yc, zr], [x0, yc, zr]])
-      + poly('sb-roof r-gable', [[x0, y0, z1], [x0, y1, z1], [x0, yc, zr]]);
-    if (b.chimney) { const cx = x0 + (x1 - x0) * 0.3; s += box(P, { x0: cx - 0.8, x1: cx + 0.8, y0: yc - 0.8, y1: yc + 0.8, z0: zr - 1, z1: zr + 1.6 }, 'sb-chimney'); }
-  } else if (ridge === 'y') {
-    const xc = (x0 + x1) / 2;
+      + poly('r-gable', [[x0, y0, z1], [x0, y1, z1], [x0, yc, zr]]);
+    crease = [[x1, y0, z1], [x0, y0, z1], [x0, yc, zr], [x1, yc, zr]];
+    if (b.chimney) { const cx = x0 + (x1 - x0) * 0.3; chimney = { x0: cx - 0.8, x1: cx + 0.8, y0: yc - 0.8, y1: yc + 0.8 }; }
+  } else {
     s += poly('sb-roof r-back', [[xc, y0, zr], [xc, y1, zr], [x1, y1, z1], [x1, y0, z1]])
       + poly('sb-roof r-front', [[x0, y0, z1], [x0, y1, z1], [xc, y1, zr], [xc, y0, zr]])
-      + poly('sb-roof r-gable', [[x0, y0, z1], [x1, y0, z1], [xc, y0, zr]]);
-    if (b.chimney) { const cy = y0 + (y1 - y0) * 0.6; s += box(P, { x0: xc - 0.8, x1: xc + 0.8, y0: cy - 0.8, y1: cy + 0.8, z0: zr - 1, z1: zr + 1.6 }, 'sb-chimney'); }
+      + poly('r-gable', [[x0, y0, z1], [x1, y0, z1], [xc, y0, zr]]);
+    crease = [[x0, y1, z1], [x0, y0, z1], [xc, y0, zr], [xc, y1, zr]];
+    if (b.chimney) { const cy = y0 + (y1 - y0) * 0.6; chimney = { x0: xc - 0.8, x1: xc + 0.8, y0: cy - 0.8, y1: cy + 0.8 }; }
   }
+  s += `<path class="k-sil nf" d="${sil}"/><path class="k-cr nf" d="${dPath(crease.map((q) => P(...q)), false)}"/></g>`;
+  if (chimney) s += box(P, { ...chimney, z0: zr - 1, z1: zr + 1.6 }, 'sb-chimney');
   return s;
 }
 
@@ -462,10 +506,10 @@ const SKETCHES = {
 
   /* S3 — the district's heat without the Raumpark, then with it: a soft blue → red heat map on
      streets and courtyards; the deck fades in (semi-transparent) and the ground below it cools. */
-  'district-heat'() {
+  'district-heat'(id, shot = 15) {
     const P = isoP(160, 139, 0.39);
-    const D = DISTRICT, g = D.plate, T = 12, CELL = 8;
-    const loop = `dur="${T}s" repeatCount="indefinite"`;
+    const T = shot, D = DISTRICT, g = D.plate, CELL = 8;
+    const loop = `dur="${T}s" fill="freeze"`;
     const inParcel = (x, y) => D.parcels.some((b) => x > b.x0 && x < b.x1 && y > b.y0 && y < b.y1)
       || (x > D.hall.x0 && x < D.hall.x1 && y > D.hall.y0 && y < D.hall.y1);
     const inBlock = (x, y) => ((x % 80) + 80) % 80 < 60 && ((y % 80) + 80) % 80 < 60;  // courtyard, not street
@@ -491,9 +535,9 @@ const SKETCHES = {
         withDeck += `<polygon class="dh dh${step(w)}" points="${quad}"/>`;
       }
     }
-    // without → (deck fades in, heat cross-fades) → with → back; the city is drawn a second time
+    // without → (deck fades in, heat cross-fades) → with, held to the end of the shot; the city is drawn a second time
     // with the pylons so the houses in front still hide them
-    const fadeIn = `<animate attributeName="opacity" ${loop} values="0;0;1;1;0" keyTimes="0;0.4;0.55;0.95;1"/>`;
+    const fadeIn = `<animate attributeName="opacity" ${loop} values="0;0;1;1" keyTimes="0;0.4;0.55;1"/>`;
     return `
       <rect class="sb-bg" width="320" height="180"/>
       ${groundSvg(P)}
@@ -508,16 +552,16 @@ const SKETCHES = {
   },
 
   /* S2 — Westbahnhof isometric with an animated sun and the deck's shadow */
-  sun(id) {
-    // Summer (21 June) then winter (21 December), 10 s each. Both day arcs stay visible:
+  sun(id, shot = 20) {
+    // Summer (21 June) then winter (21 December), half the shot each. Both day arcs stay visible:
     // the active season's arc is strong, the other one fades back.
     const P = isoP(160, 139, 0.39);
     const base = districtBase(P);
-    const DAY = 10, loop = `dur="${2 * DAY}s" repeatCount="indefinite"`;
+    const DAY = shot / 2, loop = `dur="${shot}s" fill="freeze"`;
     const summer = sunLayer(P, DAY, `${id}s`, 'jun');
     const winter = sunLayer(P, DAY, `${id}w`, 'dec');
-    const on = (first) => `<animate attributeName="opacity" ${loop} values="${first ? '1;1;0;0;1' : '0;0;1;1;0'}" keyTimes="0;0.48;0.5;0.98;1"/>`;
-    const strong = (first) => `<animate attributeName="opacity" ${loop} values="${first ? '1;1;0.25;0.25;1' : '0.25;0.25;1;1;0.25'}" keyTimes="0;0.48;0.5;0.98;1"/>`;
+    const on = (first) => `<animate attributeName="opacity" ${loop} values="${first ? '1;1;0;0' : '0;0;1;1'}" keyTimes="0;0.48;0.5;1"/>`;
+    const strong = (first) => `<animate attributeName="opacity" ${loop} values="${first ? '1;1;0.25;0.25' : '0.25;0.25;1;1'}" keyTimes="0;0.48;0.5;1"/>`;
     return `
       <rect class="sb-bg" width="320" height="180"/>
       ${base.ground}
@@ -563,26 +607,26 @@ const SKETCHES = {
 
   /* S5 — overview → the Raumpark turns transparent → push-in on one window → the view out of
      that window fills the frame, with the isometric sun study as a synced inset bottom right */
-  split(id) {
-    const dur = 10;                 // sun cycle inside the split screen
-    const T = 16;                   // whole sequence, looping
-    const loop = `dur="${T}s" repeatCount="indefinite"`;
+  split(id, shot = 20) {
+    const dur = shot / 2;    // sun cycle: two per shot, the second one on the window view
+    const T = shot;          // the whole sequence, once per shot
+    const loop = `dur="${T}s" fill="freeze"`;
     // ---- steps 1–3: overview, deck fades, push-in on the window
     const PA = isoP(160, 139, 0.39);
     const base = districtBase(PA);
     const WIN = [190, 80, 12];                                   // a window on a Gründerzeit facade below the deck
     const [wx, wy] = PA(...WIN);
-    const winQuad = pts(PA, [[187.5, 80, 10.5], [192.5, 80, 10.5], [192.5, 80, 13.5], [187.5, 80, 13.5]]);
+    const winQuad = pts(PA, [[188.5, 80, 9.5], [191.5, 80, 9.5], [191.5, 80, 14.5], [188.5, 80, 14.5]]);
     const k = 4.5, tx = 160 - k * wx, ty = 96 - k * wy;          // zoom so the window lands mid-frame
-    const zoomKT = '0;0.3;0.44;0.97;1', zoomKS = '0 0 1 1;.45 0 .2 1;0 0 1 1;0 0 1 1';
+    const zoomKT = '0;0.3;0.44;1', zoomKS = '0 0 1 1;.45 0 .2 1;0 0 1 1';
     const overview = `
       <g class="s4-overview">
-        <animate attributeName="opacity" ${loop} values="1;1;0;0;1" keyTimes="0;0.5;0.56;0.97;1"/>
-        <g><animateTransform attributeName="transform" type="translate" ${loop} values="0 0;0 0;${f(tx)} ${f(ty)};${f(tx)} ${f(ty)};0 0" keyTimes="${zoomKT}" calcMode="spline" keySplines="${zoomKS}"/>
-          <g><animateTransform attributeName="transform" type="scale" ${loop} values="1;1;${k};${k};1" keyTimes="${zoomKT}" calcMode="spline" keySplines="${zoomKS}"/>
+        <animate attributeName="opacity" ${loop} values="1;1;0;0" keyTimes="0;0.5;0.56;1"/>
+        <g><animateTransform attributeName="transform" type="translate" ${loop} values="0 0;0 0;${f(tx)} ${f(ty)};${f(tx)} ${f(ty)}" keyTimes="${zoomKT}" calcMode="spline" keySplines="${zoomKS}"/>
+          <g><animateTransform attributeName="transform" type="scale" ${loop} values="1;1;${k};${k}" keyTimes="${zoomKT}" calcMode="spline" keySplines="${zoomKS}"/>
             ${base.ground}${base.city}
             <g class="s4-deck">
-              <animate attributeName="opacity" ${loop} values="1;1;0.12;0.12;1" keyTimes="0;0.16;0.28;0.97;1"/>
+              <animate attributeName="opacity" ${loop} values="1;1;0.12;0.12" keyTimes="0;0.16;0.28;1"/>
               ${base.deck}
             </g>
             <polygon class="s4-window" points="${winQuad}"/>
@@ -592,28 +636,55 @@ const SKETCHES = {
       </g>`;
 
     // ---- step 4: the window fills the frame, the model sits as an inset bottom right
-    // the sun patch on the floor drifts as the sun moves; the deck's shadow passes the window
+    // A tall Gründerzeit casement window with a transom (x 80–156, y 8–146). The right casement
+    // stands open into the room, and a sheer curtain on the rod billows in the breeze through it.
+    // The sun patch on the floor drifts as the sun moves; the deck's shadow passes the window.
+    const W = { x0: 80, x1: 156, y0: 8, y1: 146, tr: 40, mid: 118 };
     const patch = [
-      '60,180 120,146 210,146 180,180', '120,180 160,146 250,146 235,180', '190,180 200,146 280,146 300,180',
+      '22,180 64,150 150,150 114,180', '68,180 92,150 178,150 160,180', '124,180 122,150 204,150 218,180',
     ];
+    // the curtain's outline and two folds; every frame has the same commands, so SMIL can tween them
+    const breeze = `dur="${shot / 4}s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.3;0.6;1" keySplines=".45 0 .55 1;.45 0 .55 1;.45 0 .55 1"`;
+    const curtain = [
+      'M188,6 L226,6 C231,50 240,98 236,152 Q226,157 215,152 Q205,148 196,153 C192,100 185,52 188,6 Z',
+      'M188,6 L226,6 C240,44 256,90 252,146 Q241,155 228,147 Q219,141 206,149 C198,98 187,48 188,6 Z',
+      'M188,6 L226,6 C238,48 252,96 248,150 Q236,157 222,150 Q209,145 199,152 C194,99 186,50 188,6 Z',
+    ];
+    const folds = [
+      'M200,7 C204,60 210,110 212,152 M214,7 C220,58 228,108 228,152',
+      'M200,7 C208,56 220,104 222,148 M214,7 C226,52 240,100 242,146',
+      'M200,7 C206,58 216,106 218,151 M214,7 C224,55 238,104 238,150',
+    ];
+    const loopVals = (fr) => [...fr, fr[0]].join(';');
     const interior = `
       <rect class="sb-wall" x="0" y="0" width="320" height="180"/>
-      <rect class="sb-sky" x="50" y="14" width="220" height="124"/>
-      <rect class="sb-deck-under" x="50" y="14" width="220" height="20"/>
-      <rect class="sb-deck-edge" x="50" y="32" width="220" height="4"/>
-      <rect class="sb-facade-bg" x="50" y="66" width="220" height="72"/>
-      <g class="sb-facade">${[0, 1, 2, 3].map((r) => Array.from({ length: 10 }, (_, c) =>
-        `<rect x="${58 + c * 21}" y="${74 + r * 16}" width="11" height="8"/>`).join('')).join('')}</g>
-      <rect class="sb-pylon-flat" x="210" y="36" width="12" height="102"/>
-      <rect class="sb-passing" x="50" y="36" width="70" height="102" clip-path="url(#${id}-win)">
-        <animate attributeName="x" dur="${dur}s" repeatCount="indefinite" values="-60;50;180;290" keyTimes="0;0.35;0.65;1"/>
+      <rect class="sb-sky" x="${W.x0}" y="${W.y0}" width="${W.x1 - W.x0}" height="${W.y1 - W.y0}"/>
+      <rect class="sb-deck-under" x="${W.x0}" y="${W.y0}" width="${W.x1 - W.x0}" height="18"/>
+      <rect class="sb-deck-edge" x="${W.x0}" y="${W.y0 + 16}" width="${W.x1 - W.x0}" height="4"/>
+      <rect class="sb-facade-bg" x="${W.x0}" y="70" width="${W.x1 - W.x0}" height="${W.y1 - 70}"/>
+      <g class="sb-facade">${[0, 1, 2, 3].map((r) => Array.from({ length: 4 }, (_, c) =>
+        `<rect x="${85 + c * 19}" y="${76 + r * 17}" width="7" height="11"/>`).join('')).join('')}</g>
+      <rect class="sb-pylon-flat" x="132" y="${W.y0 + 20}" width="11" height="${W.y1 - W.y0 - 20}"/>
+      <rect class="sb-passing" x="${W.x0}" y="32" width="60" height="112" clip-path="url(#${id}-win)">
+        <animate attributeName="x" dur="${dur}s" repeatCount="indefinite" values="20;80;130;170" keyTimes="0;0.35;0.65;1"/>
       </rect>
-      <rect class="sb-window" x="50" y="14" width="220" height="124"/>
-      <path class="sb-mullion" d="M160 14 V138 M50 74 H270"/>
-      <rect class="sb-floor" x="0" y="146" width="320" height="34"/>
+      <rect class="sb-glass" x="${W.x0}" y="${W.y0}" width="${W.x1 - W.x0}" height="${W.tr - W.y0}"/>
+      <rect class="sb-glass" x="${W.x0}" y="${W.tr}" width="${W.mid - W.x0}" height="${W.y1 - W.tr}"/>
+      <rect class="sb-window" x="${W.x0}" y="${W.y0}" width="${W.x1 - W.x0}" height="${W.y1 - W.y0}"/>
+      <path class="sb-mullion" d="M${W.x0} ${W.tr} H${W.x1} M${W.mid} ${W.tr} V${W.y1}"/>
+      <rect class="sb-sill" x="${W.x0 - 6}" y="${W.y1}" width="${W.x1 - W.x0 + 12}" height="3"/>
+      <rect class="sb-floor" x="0" y="150" width="320" height="30"/>
       <polygon class="sb-patch" points="${patch[0]}">
         <animate attributeName="points" dur="${dur}s" repeatCount="indefinite" values="${patch.join(';')};${patch[0]}" keyTimes="0;0.45;0.9;1"/>
       </polygon>
+      <g class="sb-sash">
+        <polygon class="sb-glass" points="${W.x1},${W.tr} 182,${W.tr - 8} 182,${W.y1 + 10} ${W.x1},${W.y1}"/>
+        <polygon class="sb-sash-frame" points="${W.x1},${W.tr} 182,${W.tr - 8} 182,${W.y1 + 10} ${W.x1},${W.y1}"/>
+        <path class="sb-sash-bar" d="M${W.x1} ${(W.tr + W.y1) / 2} L182 ${(W.tr + W.y1) / 2 + 1}"/>
+      </g>
+      <path class="sb-rod" d="M${W.x0 - 10} 5 H${W.x1 + 34}"/>
+      <g transform="translate(-42 0)"><path class="sb-curtain" d="${curtain[0]}"><animate attributeName="d" ${breeze} values="${loopVals(curtain)}"/></path>
+      <path class="sb-curtain-fold" d="${folds[0]}"><animate attributeName="d" ${breeze} values="${loopVals(folds)}"/></path></g>
 `;
     // inset: small isometric with the same sun timing and the window marked
     const P = isoP(254, 153, 0.16);
@@ -624,7 +695,7 @@ const SKETCHES = {
 `;
     const splitView = `
       <g class="s4-split" opacity="0">
-        <animate attributeName="opacity" ${loop} values="0;0;1;1;0" keyTimes="0;0.5;0.56;0.97;1"/>
+        <animate attributeName="opacity" ${loop} values="0;0;1;1" keyTimes="0;0.5;0.56;1"/>
         <rect class="sb-bg" width="320" height="180"/>
         ${interior}
         ${inset}
@@ -632,7 +703,7 @@ const SKETCHES = {
 
     return `
       <rect class="sb-bg" width="320" height="180"/>
-      <clipPath id="${id}-win"><rect x="50" y="14" width="220" height="124"/></clipPath>
+      <clipPath id="${id}-win"><rect x="80" y="8" width="76" height="138"/></clipPath>
       ${overview}
       ${splitView}`;
   },
@@ -645,9 +716,9 @@ const SKETCHES = {
 
   /* S10 — circulation: a route builds up from the street, up a stair core, along the
      deck past every use and down again; each use lights up as the route reaches it. */
-  circulation() {
+  circulation(id, shot = 15) {
     const P = isoP(122, 190, 0.68);
-    const z = DISTRICT.deck.z1 + 0.4, DUR = 8, DRAW = 0.75;   // line draws in 75 % of the cycle, then holds
+    const z = DISTRICT.deck.z1 + 0.4, DUR = shot, DRAW = 0.75;   // line draws in 75 % of the shot, then holds
     // route in world metres: [x, y, z] (street → stair up → deck arms → stair down → street)
     const route = [
       [230, -14, 0.3], [230, 62, 0.3], [230, 62, z],            // street, then up the stair core at (230, 70)
@@ -680,11 +751,11 @@ const SKETCHES = {
       { use: 'green', i: 6 },
       { use: 'res', i: 7 },
     ];
-    const kt = (t) => `0;${t.toFixed(3)};${Math.min(t + 0.02, 0.94).toFixed(3)};0.95;1`;
+    const kt = (t) => `0;${t.toFixed(3)};${(t + 0.02).toFixed(3)};1`;
     const nodes = stops.map((s) => {
       const [x, y] = scr[s.i], t = at(s.i) * DRAW;
       return `<g class="circ-stop use-${s.use}" opacity="0">
-        <animate attributeName="opacity" dur="${DUR}s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="${kt(t)}"/>
+        <animate attributeName="opacity" dur="${DUR}s" fill="freeze" values="0;0;1;1" keyTimes="${kt(t)}"/>
         <circle class="circ-node" cx="${f(x)}" cy="${f(y)}" r="3.4"/>
 </g>`;
     }).join('');
@@ -697,11 +768,11 @@ const SKETCHES = {
       ${stairs}
       <path class="circ-trace" d="${d}"/>
       <path class="circ-route" d="${d}" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100">
-        <animate attributeName="stroke-dashoffset" dur="${DUR}s" repeatCount="indefinite" values="100;0;0" keyTimes="0;${DRAW};1"/>
+        <animate attributeName="stroke-dashoffset" dur="${DUR}s" fill="freeze" values="100;0;0" keyTimes="0;${DRAW};1"/>
       </path>
       ${nodes}
       <circle class="circ-head" r="3">
-        <animateMotion dur="${DUR}s" repeatCount="indefinite" path="${d}" keyPoints="0;1;1" keyTimes="0;${DRAW};1" calcMode="linear"/>
+        <animateMotion dur="${DUR}s" fill="freeze" path="${d}" keyPoints="0;1;1" keyTimes="0;${DRAW};1" calcMode="linear"/>
       </circle>
 `;
   },
@@ -757,23 +828,73 @@ const SKETCHES = {
         <line class="sol-pv" x1="0" y1="${132}" x2="10" y2="${132}"/><line class="sol-pv" x1="0" y1="${135}" x2="10" y2="${135}"/>
       </g>`;
   },
-
-  /* S12 — layers lift off, key figures */
-  layers() {
-    const P = isoP(160, 150, 0.3);
-    const D = DISTRICT;
-    const city = drawCity(P);
-    const pyl = D.pylons.map((b) => box(P, b, 'sb-pylon')).join('');
-    const ground = groundSvg(P);
-    return `
-      <rect class="sb-bg" width="320" height="180"/>
-      ${ground}${city}
-      <g class="sb-lift sb-lift--1">${pyl}</g>
-      <g class="sb-lift sb-lift--2">${deckSlab(P)}</g>
-      <g class="sb-lift sb-lift--3">${useBoxes(P, 'all')}</g>
-`;
-  },
 };
+
+/* -------------------------------------------------------------------------
+   Hairline figures: a shot with a "figure" key shows a line figure instead of
+   an SVG sketch (js/hairline/, drawn on the engine of @lucasmarkes/hairline,
+   MIT). The engine (js/hairline/kernel.js) is loaded as a classic script by
+   index.html and gives the global HL. Each figure file ends with
+   hairline({ ... }); here that call registers the figure by name.
+   The figures answer a pointer; here the pointer is scripted: the shot's
+   "motion" keyframes ({ t, at: [x, y] in the 400 × 320 viewBox or null,
+   value }) are played against the shot's own clock, so the figure is a
+   pre-made animation that follows the playhead. Real pointer input is off.
+   ------------------------------------------------------------------------- */
+
+const FIGURES = new Map();
+window.hairline = (fig) => { FIGURES.set(fig.name, fig); };
+
+/** The scripted pointer and value at time t: each linear between the keyframes that set it, held past the last. */
+function sampleMotion(motion, t) {
+  const track = (has) => {
+    const keys = motion.filter(has);
+    const i = keys.findLastIndex((m) => m.t <= t);
+    return [keys[i], keys[i + 1], (m) => (t - keys[i].t) / (m.t - keys[i].t)];
+  };
+  const [a, b, k] = track((m) => 'at' in m);
+  const [va, vb, kv] = track((m) => m.value != null);
+  const lerp = (p, q, s) => p + (q - p) * s;
+  return {
+    at: !a?.at ? null : b?.at ? [lerp(a.at[0], b.at[0], k(b)), lerp(a.at[1], b.at[1], k(b))] : a.at,
+    value: !va ? null : vb ? lerp(va.value, vb.value, kv(vb)) : va.value,
+  };
+}
+
+/** Mounts a figure into host; seek(t) puts it where its motion script is t seconds into the shot. */
+function mountFigure(host, fig, motion = []) {
+  HL.inject(document);
+  const stage = document.createElement('div');
+  stage.className = 'sb-figure';
+  stage.dataset.hairline = fig.name;
+  stage.setAttribute('role', 'img');
+  stage.setAttribute('aria-label', fig.means);
+  const out = document.createElement('span');
+  out.className = 'sb-figure__read';
+  host.append(stage, out);
+  const svg = HL.mk('svg', { viewBox: '0 0 400 320', 'aria-hidden': 'true' }, stage);
+  const read = { get textContent() { return out.textContent; }, set textContent(v) { out.textContent = v ?? ''; } };
+  const handle = fig.mount({ stage, svg, read }, fig.range[1]);
+  if (!out.textContent) out.textContent = 'rest';
+  let value = fig.range[1], inside = false;
+  const send = (type, at) => {
+    const r = stage.getBoundingClientRect();
+    stage.dispatchEvent(new PointerEvent(type, {
+      pointerType: 'mouse', pointerId: 1, bubbles: type === 'pointermove',
+      clientX: r.left + ((at?.[0] ?? 0) / 400) * r.width, clientY: r.top + ((at?.[1] ?? 0) / 320) * r.height,
+    }));
+  };
+  return {
+    seek(t) {
+      const m = sampleMotion(motion, t);
+      const v = m.value ?? fig.range[1];
+      if (v !== value) { value = v; handle.set(v); }
+      if (m.at) { send('pointermove', m.at); inside = true; }
+      else if (inside) { send('pointerleave'); inside = false; }
+    },
+    destroy() { handle.destroy(); },
+  };
+}
 
 /* -------------------------------------------------------------------------
    Storyboard strip: each shot reduced to the basic outline of its content
@@ -785,8 +906,12 @@ function thumb(sketch) {
   const line = (list) => `M${list.map((q) => q.map(f).join(',')).join(' L')}`;
   let content;
   if (sketch === 'heatmap') content = path(`${line(VIENNA.outline)}Z`);
-  else if (sketch === 'split') content = path('M50 14 H270 V138 H50 Z M160 14 V138 M50 74 H270');
+  else if (sketch === 'split') content = path('M80 8 H156 V146 H80 Z M80 40 H156 M118 40 V146 M156 40 L182 32 V156 L156 146');
   else if (sketch === 'solar') content = path(loopsPath(isoP(78, 190, 0.53), DISTRICT.deck.loops, DISTRICT.deck.z1));
+  else if (sketch === 'layers') {                 // the deck outline three times, stacked apart
+    const P = isoP(160, 120, 0.3);
+    content = [0, 1, 2].map((k) => path(loopsPath(P, DISTRICT.deck.loops, k * 70))).join('');
+  }
   else content = path(loopsPath(isoP(160, 139, 0.39), DISTRICT.plate.loops, 0));
   return `<svg viewBox="0 0 320 180" aria-hidden="true"><rect class="sb-thumb__frame" x="0" y="0" width="320" height="180"/>${content}</svg>`;
 }
@@ -798,7 +923,10 @@ function thumb(sketch) {
 export async function initStoryboard(el, url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`${url}: ${res.status}`);
-  render(el, await res.json());
+  const data = await res.json();
+  const names = [...new Set(data.shots.map((s) => s.figure).filter(Boolean))];
+  await Promise.all(names.map((n) => import(`./hairline/${n}.js`)));
+  render(el, data);
 }
 
 function render(el, data) {
@@ -877,19 +1005,41 @@ function render(el, data) {
   const cells = [...el.querySelectorAll('.sb-cell, .sb-thumb')];
 
   // Sequenced sketches pick the moment that tells the most when motion is reduced (e.g. the window view in S4).
-  const STILL = { split: 12, 'district-heat': 8, sun: 5.5 };
-  let pos = 0, cur = -1, playing = false, last = 0, visible = false, gen = 0;
+  const STILL = { split: 12, 'district-heat': 8, sun: 5.5, layers: 4 };
+  let pos = 0, cur = -1, playing = false, last = 0, visible = false, gen = 0, figure = null;
   const shotAt = (x) => Math.max(0, shots.findIndex((s) => x >= s.start && x < s.start + s.duration));
+
+  /** Puts the sketch on screen at t seconds into its shot: its SMIL clock and its CSS animations. */
+  const syncSketch = (t) => {
+    const svg = view.querySelector('svg.sb-sketch');
+    if (!svg) return;
+    svg.setCurrentTime?.(t);
+    for (const a of svg.getAnimations?.({ subtree: true }) ?? []) a.currentTime = t * 1000;
+  };
 
   /** Put shot idx on the big screen (a fresh SVG, so its animation starts from the beginning). */
   const show = (idx) => {
     if (idx === cur) return;
     cur = idx;
     const s = shots[idx], next = shots[idx + 1];
-    view.innerHTML = `<svg class="sb-sketch" viewBox="0 0 320 180" data-sketch="${esc(s.sketch)}" aria-label="Sketch: ${esc(s.title)}">${SKETCHES[s.sketch]?.(`sk${idx}-${++gen}`) ?? ''}</svg>`;
-    const svg = view.querySelector('svg');
-    if (reduced) { svg.setCurrentTime?.(STILL[s.sketch] ?? 5.5); svg.pauseAnimations?.(); }
-    else if (!playing) svg.pauseAnimations?.();
+    figure?.destroy();
+    figure = null;
+    const fig = FIGURES.get(s.figure);
+    view.classList.toggle('is-figure', !!fig);
+    if (fig) {
+      view.innerHTML = '';
+      figure = mountFigure(view, fig, s.motion);
+      figure.seek(reduced ? STILL[s.sketch] ?? 0 : Math.max(0, pos - s.start));
+    } else {
+      // each sketch runs once over its shot: it gets the duration, and CSS reads it as --shot
+      view.innerHTML = `<svg class="sb-sketch" viewBox="0 0 320 180" style="--shot:${s.duration}s" data-sketch="${esc(s.sketch)}" aria-label="Sketch: ${esc(s.title)}">${SKETCHES[s.sketch]?.(`sk${idx}-${++gen}`, s.duration) ?? ''}</svg>`;
+      const svg = view.querySelector('svg');
+      if (reduced) { svg.setCurrentTime?.(STILL[s.sketch] ?? 5.5); svg.pauseAnimations?.(); }
+      else {
+        if (!playing) svg.pauseAnimations?.();
+        syncSketch(pos - s.start);
+      }
+    }
     view.setAttribute('aria-label', `${s.code}: ${s.title}`);
     cap.textContent = `${s.code} · ${s.kicker}`;
     info.innerHTML = `
@@ -913,6 +1063,12 @@ function render(el, data) {
   const draw = () => {
     head.style.left = `${pct(pos)}%`;
     tcEl.textContent = tc(pos);
+    if (reduced) return;
+    const t = pos - shots[cur].start;
+    if (figure) figure.seek(t);
+    // the sketch keeps its own clock; pull it back to the playhead when it drifts (a jump, a hidden tab)
+    const svg = view.querySelector('svg.sb-sketch');
+    if (svg?.getCurrentTime && Math.abs(svg.getCurrentTime() - t) > 0.15) syncSketch(t);
   };
 
   const setPlaying = (on) => {

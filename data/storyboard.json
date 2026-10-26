@@ -70,10 +70,39 @@
       "camera": "Same isometric view, gentle push-in to street level",
       "graphics": "Flow arrows · speed labels",
       "data": "CFD results or schematic flow (to decide)",
-      "transition": "Split screen"
+      "transition": "Same camera, the model comes apart"
     },
     {
       "code": "S5",
+      "tier": "core",
+      "sketch": "layers",
+      "figure": "layers",
+      "title": "Layers",
+      "kicker": "Exploded axo · city scale to deck",
+      "duration": 10,
+      "scale": [
+        "district"
+      ],
+      "motion": [
+        { "t": 0, "at": null, "value": 30 },
+        { "t": 1.2, "at": [200, 215] },
+        { "t": 3, "at": [200, 215] },
+        { "t": 3.3, "at": [200, 182] },
+        { "t": 5, "at": [200, 182] },
+        { "t": 5.3, "at": [200, 159] },
+        { "t": 7, "at": [200, 159] },
+        { "t": 7.3, "at": [200, 138] },
+        { "t": 8.8, "at": [200, 138] },
+        { "t": 9, "at": null }
+      ],
+      "idea": "After the district's sun, heat and wind, the model comes apart into its layers: the existing city, the pylons over the street crossings, the deck that branches along the streets, and the use volumes on top. The stack opens at one layer after the other, from the city up, and each is named, so the viewer knows what the Raumpark is made of before it closes again and the camera goes down to one window.",
+      "camera": "Isometric, the stack opens at one layer after the other",
+      "graphics": "Exploded layers · dashed drops where the pylons land · layer name",
+      "data": "3D model of the district, split into layers",
+      "transition": "Back together, push in on a window"
+    },
+    {
+      "code": "S6",
       "tier": "core",
       "sketch": "split",
       "title": "Window & model, side by side",
@@ -90,7 +119,7 @@
       "transition": "Up onto the deck"
     },
     {
-      "code": "S6",
+      "code": "S7",
       "tier": "core",
       "sketch": "use-culture",
       "title": "Use: culture",
@@ -106,7 +135,7 @@
       "transition": "Next zone"
     },
     {
-      "code": "S7",
+      "code": "S8",
       "tier": "core",
       "sketch": "use-health",
       "title": "Use: health & wellbeing",
@@ -122,7 +151,7 @@
       "transition": "Next zone"
     },
     {
-      "code": "S8",
+      "code": "S9",
       "tier": "core",
       "sketch": "use-res",
       "title": "Use: residential",
@@ -138,7 +167,7 @@
       "transition": "Next zone"
     },
     {
-      "code": "S9",
+      "code": "S10",
       "tier": "core",
       "sketch": "use-green",
       "title": "Use: green areas",
@@ -154,7 +183,7 @@
       "transition": "Next: how it connects"
     },
     {
-      "code": "S10",
+      "code": "S11",
       "tier": "core",
       "sketch": "circulation",
       "title": "Circulation",
@@ -171,7 +200,7 @@
       "transition": "Cut to diagram"
     },
     {
-      "code": "S11",
+      "code": "S12",
       "tier": "core",
       "sketch": "solar",
       "title": "Greenery & solar income",
@@ -183,23 +212,7 @@
       "idea": "A diagram over the whole deck: a heat map of how much sun each part receives over the year, with the use volumes casting their shade. From it follows where planting thrives, where shade-loving planting belongs, and where PV pays off, with the share of each shown as bars.",
       "camera": "Top-down / isometric diagram, heat map sweeps in",
       "graphics": "Solar heat map · legend · share bars · PV",
-      "data": "Yearly sun on the deck (calculated) · planting and PV assumptions",
-      "transition": "Pull back"
-    },
-    {
-      "code": "S12",
-      "tier": "core",
-      "sketch": "layers",
-      "title": "Layers & key figures",
-      "kicker": "Exploded axo · outro",
-      "duration": 10,
-      "scale": [
-        "district"
-      ],
-      "idea": "The model separates into its layers (city, structure, deck, use volumes) while the key figures count up. A closing image that also works as a still for print.",
-      "camera": "Isometric, layers lift off",
-      "graphics": "Layer labels · counters",
-      "data": "Approved key figures"
+      "data": "Yearly sun on the deck (calculated) · planting and PV assumptions"
     }
   ]
 }

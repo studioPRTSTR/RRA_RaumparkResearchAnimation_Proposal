@@ -253,6 +253,16 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
 .sb-sketch { animation: sb-in 0.45s ease both; }
 .sb-screen.is-paused * { animation-play-state: paused !important; }
 @keyframes sb-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* hairline figures (js/hairline/): a 5:4 stage centred on the 16:9 screen, in the drawing set's tokens */
+.sb-screen__view.is-figure { background: var(--paper); }
+.sb-figure {
+  position: absolute; top: 0; bottom: 0; left: 50%; height: 100%; transform: translateX(-50%);
+  animation: sb-in 0.45s ease both; pointer-events: none;   /* driven by the shot's motion script, not the mouse */
+  --hairline-plate: var(--paper); --hairline-hi: var(--ink); --hairline-edge: var(--rule-strong);
+  --hairline-mid: var(--rule); --hairline-lo: var(--paper-3); --hairline-stroke: 1;
+}
+.sb-figure__read { position: absolute; top: 12px; right: 14px; font: 500 11px var(--font-mono); color: var(--ink-2); font-variant-numeric: tabular-nums; pointer-events: none; }
 .sb-overview__bar .btn { height: 30px; padding: 0 10px; }
 .sb-seek { cursor: pointer; }
 .sb-track--picture .sb-cell, .sb-lane .sb-cell { cursor: pointer; }
@@ -276,22 +286,29 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
 /* ---------------------------------------------------------------- storyboard: sketch drawing styles */
 
 .sb-frame svg * { stroke-linejoin: round; }
+/* Line hierarchy, as in the Hairline figures (js/hairline/): a silhouette, one dim crease inside
+   it, the Raumpark and the focused use dark; colour lives in the fills. */
+.sb-frame { --k-sil: color-mix(in srgb, var(--ink) 58%, var(--paper)); --k-cr: color-mix(in srgb, var(--ink) 24%, var(--paper)); }
+.nf { fill: none; }
+.k-sil { stroke: var(--k-sil); stroke-width: 0.3; stroke-linecap: round; }
+.k-cr { stroke: var(--k-cr); stroke-width: 0.22; stroke-linecap: round; }
 .sb-bg { fill: var(--paper); }
-.sb-ground { fill: var(--paper-2); stroke: var(--ink); stroke-width: 0.5; }
-.sb-context { fill: none; stroke: var(--rule); stroke-width: 0.35; }
-.sb-plate-edge { stroke-width: 1; }
-.sb-park { fill: color-mix(in srgb, var(--park) 30%, var(--paper-2)); stroke: var(--ink); stroke-width: 0.35; }
-.sb-tree { fill: color-mix(in srgb, var(--park) 72%, #000); stroke: var(--ink); stroke-width: 0.25; }
-.sb-block polygon, .sb-hall polygon, .sb-pylon polygon, .sb-deck polygon, .sb-pav polygon { stroke: var(--ink); stroke-width: 0.4; }
-.sb-block polygon, .sb-roof, .r-gable { fill: var(--bldg); }
-.sb-roof { stroke: var(--ink); stroke-width: 0.35; stroke-linejoin: round; }
-.sb-chimney polygon { fill: var(--bldg); stroke: var(--ink); stroke-width: 0.25; }
+.sb-ground { fill: var(--paper-2); stroke: var(--k-sil); stroke-width: 0.3; }
+.sb-context { fill: none; stroke: var(--k-cr); stroke-width: 0.25; }
+.sb-plate-edge { stroke-width: 0.5; }
+.sb-park { fill: color-mix(in srgb, var(--park) 26%, var(--paper-2)); stroke: var(--k-cr); stroke-width: 0.22; }
+.sb-tree { fill: color-mix(in srgb, var(--park) 55%, var(--paper)); stroke: color-mix(in srgb, var(--park) 75%, var(--ink)); stroke-width: 0.22; }
+.sb-block .f-s, .sb-block .f-t, .r-gable { fill: var(--bldg); }
+.sb-roof { fill: color-mix(in srgb, var(--stone-top) 70%, var(--bldg)); }
+.r-front { fill: var(--stone-top); }
+.sb-chimney .f-s, .sb-chimney .f-t { fill: var(--stone-top); }
 .sb-hall .f-t { fill: var(--paper); }
-.sb-hall .f-s, .sb-hall .f-w { fill: var(--paper-3); }
-.sb-pylon polygon { fill: var(--ink-2); }
-.sb-deck .f-t { fill: color-mix(in srgb, var(--park) 38%, var(--paper)); }
-.sb-deck .f-s, .sb-deck .f-w { fill: var(--park); }
-.sb-pav polygon { fill: var(--paper); }
+.sb-hall .f-s { fill: var(--paper-3); }
+.sb-pylon .f-s, .sb-pylon .f-t { fill: color-mix(in srgb, var(--ink) 28%, var(--paper)); }
+.sb-deck .f-t { fill: color-mix(in srgb, var(--park) 34%, var(--paper)); }
+.sb-deck .f-s { fill: color-mix(in srgb, var(--park) 62%, var(--paper)); }
+.sb-deck .k-sil { stroke: color-mix(in srgb, var(--park) 45%, var(--ink)); }
+.sb-pav .f-s, .sb-pav .f-t { fill: var(--paper); }
 .sb-shadow { fill: var(--shadow); fill-opacity: 0.32; }
 .sb-arc { fill: none; stroke: var(--sun); stroke-width: 0.8; stroke-dasharray: 3 2; }
 .sb-tick, .sb-sun circle, .sb-mark { fill: var(--sun); }
@@ -320,9 +337,9 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
 .dh1 { fill: #8eaecd; } .dh2 { fill: #b3c6d9; } .dh3 { fill: #d6dde4; } .dh4 { fill: #f1dccb; }
 .dh5 { fill: #f3bb92; } .dh6 { fill: #ee9a63; } .dh7 { fill: #e5735a; }
 .dh-deck .f-t { fill-opacity: 0.35; }
-.dh-deck .f-s, .dh-deck .f-w { fill-opacity: 0.55; }
+.dh-deck .f-s { fill-opacity: 0.55; }
 .sb-heat circle { animation: sb-heat 3.6s ease-in-out infinite; animation-delay: var(--d, 0ms); }
-.sb-zoom rect { fill: none; stroke: var(--ink); stroke-width: 1; transform-box: fill-box; transform-origin: center; animation: sb-zoom 3.6s ease-in-out infinite; }
+.sb-zoom rect { fill: none; stroke: var(--ink); stroke-width: 1; transform-box: fill-box; transform-origin: center; animation: sb-zoom var(--shot, 15s) ease-in-out both; }
 .sb-zoom path { fill: none; stroke: var(--ink-3); stroke-width: 0.4; }
 .sb-flow { fill: none; stroke: var(--wind); stroke-width: 0.9; stroke-linecap: round; stroke-dasharray: 5 9; animation: sb-flow 1.4s linear infinite; }
 .sb-flow--fast { stroke-width: 1.4; animation-duration: 0.6s; }
@@ -336,8 +353,15 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
 .sb-facade-bg { fill: var(--stone); }
 .sb-facade rect { fill: color-mix(in srgb, var(--ink) 25%, var(--stone)); }
 .sb-passing { fill: var(--shadow); fill-opacity: 0.28; }
-.sb-window { fill: none; stroke: var(--ink); stroke-width: 3; }
-.sb-mullion { fill: none; stroke: var(--ink); stroke-width: 1.6; }
+.sb-window { fill: none; stroke: var(--ink); stroke-width: 2.2; }
+.sb-mullion { fill: none; stroke: var(--ink); stroke-width: 1.2; }
+.sb-glass { fill: color-mix(in srgb, var(--wind) 14%, transparent); }
+.sb-sill { fill: var(--stone-top); stroke: var(--k-sil); stroke-width: 0.3; }
+.sb-sash-frame { fill: none; stroke: var(--ink); stroke-width: 1.4; }
+.sb-sash-bar { fill: none; stroke: var(--ink); stroke-width: 0.8; }
+.sb-rod { fill: none; stroke: var(--ink-2); stroke-width: 1.2; stroke-linecap: round; }
+.sb-curtain { fill: color-mix(in srgb, var(--paper) 72%, transparent); stroke: var(--k-sil); stroke-width: 0.4; }
+.sb-curtain-fold { fill: none; stroke: var(--k-cr); stroke-width: 0.4; stroke-linecap: round; }
 .sb-floor { fill: color-mix(in srgb, var(--stone) 45%, var(--paper)); }
 .sb-patch { fill: var(--sun); fill-opacity: 0.45; }
 .sb-split { stroke: var(--ink); stroke-width: 1.2; }
@@ -345,34 +369,33 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
 .s4-window { fill: var(--sun); stroke: var(--ink); stroke-width: 0.6; }
 .s4-inset { fill: var(--paper); }
 .s4-inset-frame { fill: none; stroke: var(--ink); stroke-width: 1; }
-.s4-deck .f-t, .s4-deck .f-s, .s4-deck .f-w { stroke: var(--park); }
+.s4-deck .k-sil, .s4-deck .k-cr { stroke: var(--park); }
+.s4-overview .k-sil { stroke-width: 1px; }
+.s4-overview .k-cr { stroke-width: 0.7px; }
 .sb-sync rect { fill: var(--paper); stroke: var(--ink); stroke-width: 0.6; }
 .sb-sync text { font: 600 6px var(--font-mono); fill: var(--ink); }
 .sb-num { font: 300 14px var(--font-sans); fill: var(--ink); }
-.sb-lift { animation: sb-lift 5s ease-in-out infinite alternate; }
-.sb-lift--1 { --y: -14px; }
-.sb-lift--2 { --y: -32px; }
-.sb-lift--3 { --y: -48px; }
 
 .use-below { opacity: 0.65; }
 .use-culture { --use: var(--use-culture); }
 .use-health { --use: var(--use-health); }
 .use-green { --use: var(--park); }
 .use-res { --use: var(--use-res); }
-.use-box polygon { stroke: var(--ink); stroke-width: 0.4; }
-.use-box.is-muted polygon { fill: none; stroke: var(--ink-3); stroke-width: 0.35; }
-.use-box.is-focus .f-t { fill: color-mix(in srgb, var(--use) 45%, var(--paper)); }
-.use-box.is-focus .f-s { fill: color-mix(in srgb, var(--use) 75%, var(--paper)); }
-.use-box.is-focus .f-w { fill: var(--use); }
-.use-box.use-green.is-focus .f-t { fill: color-mix(in srgb, var(--park) 80%, #000); }
-.use-box.use-green.is-focus .f-s { fill: color-mix(in srgb, var(--park) 65%, #000); }
-.use-box.use-green.is-focus .f-w { fill: color-mix(in srgb, var(--park) 55%, #000); }
+.use-box.is-muted .f-s, .use-box.is-muted .f-t { fill: none; }
+.use-box.is-muted .k-sil { stroke: var(--k-cr); }
+.use-box.is-muted .k-cr { stroke: none; }
+.use-box.is-focus .f-t { fill: color-mix(in srgb, var(--use) 40%, var(--paper)); }
+.use-box.is-focus .f-s { fill: color-mix(in srgb, var(--use) 80%, var(--paper)); }
+.use-box.is-focus .k-sil { stroke: color-mix(in srgb, var(--use) 40%, var(--ink)); }
+.use-box.is-focus .k-cr { stroke: color-mix(in srgb, var(--use) 60%, var(--paper)); }
+.use-box.use-green.is-focus .f-t { fill: color-mix(in srgb, var(--park) 55%, var(--paper)); }
+.use-box.use-green.is-focus .f-s { fill: color-mix(in srgb, var(--park) 85%, #000); }
 .use-swatch { fill: var(--use); }
 .use-title__name { font-size: 8px; }
 .use-loc-deck { fill: var(--paper-2); stroke: var(--ink-2); stroke-width: 0.5; }
 .use-loc { fill: var(--paper); stroke: var(--ink-3); stroke-width: 0.3; }
 .use-loc.is-focus { fill: var(--use); stroke: var(--ink); }
-.use-fade { animation: use-fade 5s ease-in-out infinite; animation-delay: var(--d); }
+.use-fade { animation: use-fade var(--shot, 15s) ease-in-out both; animation-delay: var(--d); }
 
 /* solar diagram */
 .sol.s1 { fill: color-mix(in srgb, var(--sun) 8%, var(--paper)); }
@@ -381,9 +404,9 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
 .sol.s4 { fill: color-mix(in srgb, var(--sun) 56%, var(--paper)); }
 .sol.s5 { fill: color-mix(in srgb, var(--sun) 76%, var(--paper)); }
 .sol.s6 { fill: var(--sun); }
-.sol-cells .sol { stroke: var(--paper); stroke-width: 0.3; animation: sol-cell 6s ease-out infinite; animation-delay: var(--d); }
+.sol-cells .sol { stroke: var(--paper); stroke-width: 0.3; animation: sol-cell var(--shot, 10s) ease-out both; animation-delay: var(--d); }
 .sol-track { fill: var(--paper-3); }
-.sol-bar { transform-box: fill-box; transform-origin: left; animation: sol-bar 6s ease-out infinite; animation-delay: var(--d); }
+.sol-bar { transform-box: fill-box; transform-origin: left; animation: sol-bar var(--shot, 10s) ease-out both; animation-delay: var(--d); }
 .sol-pv { stroke: var(--wind); stroke-width: 0.6; }
 
 .circ-trace { fill: none; stroke: var(--ink-3); stroke-width: 0.6; stroke-dasharray: 2 2; }
@@ -393,14 +416,13 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
 .circ-node { fill: var(--use); stroke: var(--ink); stroke-width: 0.6; }
 .circ-head { fill: var(--paper); stroke: var(--ink); stroke-width: 1.4; }
 
-@keyframes use-fade { 0% { opacity: 0; } 40%, 85% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes use-fade { 0% { opacity: 0; } 30%, 100% { opacity: 1; } }
 @keyframes sol-cell { 0% { opacity: 0; } 15%, 100% { opacity: 1; } }
 @keyframes sol-bar { 0% { transform: scaleX(0); } 25%, 100% { transform: scaleX(1); } }
 @keyframes sb-heat { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
-@keyframes sb-zoom { 0% { transform: scale(2.4); opacity: 0; } 55%, 100% { transform: scale(1); opacity: 1; } }
+@keyframes sb-zoom { 0%, 25% { transform: scale(2.4); opacity: 0; } 70%, 100% { transform: scale(1); opacity: 1; } }
 @keyframes sb-flow { to { stroke-dashoffset: -14; } }
 @keyframes sb-pulse { 0% { transform: scale(0.6); opacity: 1; } 100% { transform: scale(1.8); opacity: 0; } }
-@keyframes sb-lift { 0%, 15% { transform: none; } 85%, 100% { transform: translateY(var(--y)); } }
 
 /* ---------------------------------------------------------------- gantt */
 
@@ -521,7 +543,6 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
   .gantt__bar { transition: none; }
   .gantt__bar { transform: none; }
   .sb-frame * { animation: none !important; }
-  .sb-lift { transform: translateY(var(--y)); }
   .sb-zoom rect { transform: none; opacity: 1; }
 }
 

@@ -72,52 +72,52 @@
           "tone": "wind"
         },
         {
-          "label": "S5 Window & model split screen",
+          "label": "S5 Layers: what the Raumpark is made of",
+          "start": "2026-12-14",
+          "end": "2026-12-18",
+          "tone": "park"
+        },
+        {
+          "label": "S6 Window & model split screen",
           "start": "2026-11-30",
           "end": "2027-01-08",
           "tone": "sun"
         },
         {
-          "label": "S6 Culture",
+          "label": "S7 Culture",
           "start": "2026-12-07",
           "end": "2026-12-18",
           "tone": "culture"
         },
         {
-          "label": "S7 Health & wellbeing",
+          "label": "S8 Health & wellbeing",
           "start": "2026-12-07",
           "end": "2026-12-18",
           "tone": "health"
         },
         {
-          "label": "S8 Residential",
+          "label": "S9 Residential",
           "start": "2026-12-14",
           "end": "2027-01-08",
           "tone": "res"
         },
         {
-          "label": "S9 Green areas",
+          "label": "S10 Green areas",
           "start": "2026-12-14",
           "end": "2027-01-08",
           "tone": "park"
         },
         {
-          "label": "S10 Circulation",
+          "label": "S11 Circulation",
           "start": "2026-12-07",
           "end": "2026-12-18",
           "tone": "neutral"
         },
         {
-          "label": "S11 Greenery & solar income",
+          "label": "S12 Greenery & solar income",
           "start": "2026-11-30",
           "end": "2026-12-18",
           "tone": "sun"
-        },
-        {
-          "label": "S12 Layers & key figures",
-          "start": "2027-01-04",
-          "end": "2027-01-08",
-          "tone": "park"
         },
         {
           "label": "Render, edit & review copy",

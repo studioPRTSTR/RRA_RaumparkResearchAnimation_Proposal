@@ -27,6 +27,7 @@ js/sun.js            solar position (NOAA), used for the sun arc, shadows and so
 js/config.js         site location and key dates for the sun calculations
 js/vienna.js         Vienna's outline and the Danube for S1 (© OpenStreetMap contributors, ODbL)
 js/gantt.js          timetable built from data/timeline.json
+js/hairline/         line figure for S5 (see below)
 data/storyboard.json shots S1–S12: duration, scale, idea, camera, graphics, data
 data/timeline.json   18-week Gantt: two packages, holiday break, milestones
 ```
@@ -44,7 +45,19 @@ Edit `data/storyboard.json`. Durations drive the timeline widths and timecodes; 
 zoom-level track (`city`, `district`, `street`, `room`; two values = split screen);
 `tier: "optional"` draws the shot hatched/dashed. Sketches are picked by the `sketch` key
 (`heatmap`, `district-heat`, `sun`, `wind`, `split`, `use-culture`, `use-health`, `use-res`, `use-green`, `circulation`,
-`solar`, `layers`) in `js/storyboard.js`.
+`solar`) in `js/storyboard.js`. A shot with a `figure` key (`layers`) shows a
+Hairline figure from `js/hairline/` instead; its `sketch` key then only picks the strip thumbnail.
+
+## Hairline figures
+
+S5 (layers) is drawn on the engine of [Hairline](https://github.com/lucasmarkes/hairline)
+(MIT, © Lucas Marques): isometric line figures that answer the pointer. `js/hairline/kernel.js` is the
+engine, copied unchanged from the `hairline-create` skill and loaded as a classic script (global `HL`);
+`layers.js` is the figure. The figures are made to answer a pointer; here the pointer
+is scripted. A shot's `motion` keyframes (`t` in seconds into the shot, `at` a point in the figure's
+400 × 320 viewBox or `null` for rest, optional `value` for its intensity number) are played against
+the playhead, so the figure is a pre-made animation that pauses and scrubs with the player. The mouse
+is ignored. Colours come from the site tokens via `--hairline-*` in `css/style.css`.
 
 The sketch district lives in `DISTRICT` in `js/storyboard.js`: Gründerzeit perimeter blocks
 (white, outlines only) and the Raumpark deck as a list of rectangles `[x0, y0, x1, y1]`
