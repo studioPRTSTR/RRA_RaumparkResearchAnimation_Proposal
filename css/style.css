@@ -155,7 +155,7 @@ button, input, select { font: inherit; color: inherit; }
 
 .hero { border-bottom: var(--hair) solid var(--rule); }
 .hero__grid {
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  display: grid; grid-template-columns: minmax(0, 1fr);
   gap: clamp(24px, 4vw, 64px); padding-top: clamp(36px, 6vw, 88px); padding-bottom: clamp(36px, 6vw, 80px);
   align-items: end;
 }
@@ -298,10 +298,7 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
 .sb-plate-edge { stroke-width: 0.5; }
 .sb-park { fill: color-mix(in srgb, var(--park) 26%, var(--paper-2)); stroke: var(--k-cr); stroke-width: 0.22; }
 .sb-tree { fill: color-mix(in srgb, var(--park) 55%, var(--paper)); stroke: color-mix(in srgb, var(--park) 75%, var(--ink)); stroke-width: 0.22; }
-.sb-block .f-s, .sb-block .f-t, .r-gable { fill: var(--bldg); }
-.sb-roof { fill: color-mix(in srgb, var(--stone-top) 70%, var(--bldg)); }
-.r-front { fill: var(--stone-top); }
-.sb-chimney .f-s, .sb-chimney .f-t { fill: var(--stone-top); }
+.sb-block .f-s, .sb-block .f-t { fill: var(--bldg); }
 .sb-hall .f-t { fill: var(--paper); }
 .sb-hall .f-s { fill: var(--paper-3); }
 .sb-pylon .f-s, .sb-pylon .f-t { fill: color-mix(in srgb, var(--ink) 28%, var(--paper)); }
@@ -341,9 +338,9 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
 .sb-heat circle { animation: sb-heat 3.6s ease-in-out infinite; animation-delay: var(--d, 0ms); }
 .sb-zoom rect { fill: none; stroke: var(--ink); stroke-width: 1; transform-box: fill-box; transform-origin: center; animation: sb-zoom var(--shot, 15s) ease-in-out both; }
 .sb-zoom path { fill: none; stroke: var(--ink-3); stroke-width: 0.4; }
-.sb-flow { fill: none; stroke: var(--wind); stroke-width: 0.9; stroke-linecap: round; stroke-dasharray: 5 9; animation: sb-flow 1.4s linear infinite; }
-.sb-flow--fast { stroke-width: 1.4; animation-duration: 0.6s; }
-.sb-eddy { fill: none; stroke: var(--wind); stroke-width: 0.7; stroke-dasharray: 3 2; animation: sb-flow 1.2s linear infinite reverse; }
+.sb-vec { fill: none; stroke: var(--wind); stroke-width: 0.8; stroke-linecap: round; stroke-linejoin: round; }
+.sb-vec--deck { stroke-width: 1.3; }
+.sb-eddy { fill: none; stroke: var(--wind); stroke-width: 0.7; stroke-linecap: round; stroke-linejoin: round; }
 .sb-windarrow path { fill: none; stroke: var(--wind); stroke-width: 1.4; stroke-linecap: round; }
 .sb-wall { fill: var(--paper-3); }
 .sb-sky { fill: color-mix(in srgb, var(--wind) 10%, var(--paper)); }
@@ -421,7 +418,6 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
 @keyframes sol-bar { 0% { transform: scaleX(0); } 25%, 100% { transform: scaleX(1); } }
 @keyframes sb-heat { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
 @keyframes sb-zoom { 0%, 25% { transform: scale(2.4); opacity: 0; } 70%, 100% { transform: scale(1); opacity: 1; } }
-@keyframes sb-flow { to { stroke-dashoffset: -14; } }
 @keyframes sb-pulse { 0% { transform: scale(0.6); opacity: 1; } 100% { transform: scale(1.8); opacity: 0; } }
 
 /* ---------------------------------------------------------------- gantt */

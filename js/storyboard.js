@@ -91,36 +91,16 @@ function slab(P, loops, z0, z1, cls = '') {
 }
 
 /* A schematic Westbahnhof district on a straight isometric grid. Its footprint is irregular: a
-   stepped cluster of Gründerzeit perimeter blocks (one house per parcel, varied depths and eave
-   heights, pitched roofs, open courtyards, now and then an inner wing or one large building),
+   stepped cluster of Gründerzeit perimeter blocks as simplified boxes (four flat wings per block,
+   one eave height per block, varied depths, now and then an open side or one large building),
    the station hall and two parks, on a base plate that follows the blocks. Around it the rest
    of the city is only hinted at as faint footprints. The proposal stays plain boxes: a branching
    deck on 6 pylons along the streets. */
 const DISTRICT = (() => {
   let seed = 7;
   const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
-  const split = (len) => {                           // parcel widths along a street front
-    const out = [];
-    for (let t = 0; t < len;) {
-      let w = [11, 13, 15, 17][Math.floor(rnd() * 4)];
-      if (len - t - w < 9) w = len - t;
-      out.push([t, t + w]);
-      t += w;
-    }
-    return out;
-  };
   const parcels = [];
-  const parcel = (x0, y0, x1, y1, ridge, floorsMin = 4) => {
-    const floors = floorsMin + Math.floor(rnd() * 3);  // 4–6 storeys
-    const flat = !ridge || rnd() < 0.12;             // occasional later infill with a flat roof
-    parcels.push({
-      x0, y0, x1, y1, z0: 0,
-      z1: +(4.5 + floors * 3.4 + (flat ? 2 : 0)).toFixed(1),
-      ridge: flat ? null : ridge,
-      rh: flat ? 0 : 4 + rnd() * 2.5,
-      chimney: !flat && rnd() < 0.5,
-    });
-  };
+  const parcel = (x0, y0, x1, y1, z1) => parcels.push({ x0, y0, x1, y1, z0: 0, z1 });
 
   // Blocks on the 80 m grid (block 60 m + street 20 m). The irregular, stepped footprint comes
   // from which blocks belong to the district: [i, j, kind]
@@ -140,20 +120,18 @@ const DISTRICT = (() => {
       parks.push({ x0: bx, y0: by, x1: bx + 60, y1: by + 60, trees });
       continue;
     }
+    const z = +(4.5 + (4 + Math.floor(rnd() * 3)) * 3.4).toFixed(1);   // one eave height per block, 4–6 storeys
     if (rnd() < 0.12) {                              // one large later building on the whole block
-      parcel(bx + 4, by + 4, bx + 56, by + 56, null, 6);
+      parcel(bx + 4, by + 4, bx + 56, by + 56, z);
       continue;
     }
     const DEPTH = 11 + Math.floor(rnd() * 5);        // 11–15 m deep street fronts
     const open = rnd() < 0.18 ? Math.floor(rnd() * 2) : -1;   // sometimes one side stays open
-    split(60).forEach(([a, b]) => parcel(bx + a, by, bx + b, by + DEPTH, 'x'));
-    if (open !== 0) split(60).forEach(([a, b]) => parcel(bx + a, by + 60 - DEPTH, bx + b, by + 60, 'x'));
-    split(60 - 2 * DEPTH).forEach(([a, b]) => parcel(bx, by + DEPTH + a, bx + DEPTH, by + DEPTH + b, 'y'));
-    if (open !== 1) split(60 - 2 * DEPTH).forEach(([a, b]) => parcel(bx + 60 - DEPTH, by + DEPTH + a, bx + 60, by + DEPTH + b, 'y'));
-    if (rnd() < 0.35) {                              // an inner wing across the courtyard
-      const y = by + 26 + rnd() * 8;
-      parcel(bx + DEPTH, y, bx + 60 - DEPTH, y + 9, 'x');
-    }
+    // the perimeter block as four plain wings around the courtyard
+    parcel(bx, by, bx + 60, by + DEPTH, z);
+    if (open !== 0) parcel(bx, by + 60 - DEPTH, bx + 60, by + 60, z);
+    parcel(bx, by + DEPTH, bx + DEPTH, by + 60 - DEPTH, z);
+    if (open !== 1) parcel(bx + 60 - DEPTH, by + DEPTH, bx + 60, by + 60 - DEPTH, z);
   }
   const hall = { x0: 0, y0: 0, x1: 140, y1: 60, z1: 14, hall: true };
 
@@ -184,44 +162,11 @@ const DISTRICT = (() => {
   return { parcels, hall, parks, plate, context, deck, pylons, center: [110, 110] };
 })();
 
-/**
- * A Gründerzeit house in the same line style: walls and pitched roof are one convex solid, so one
- * silhouette; the roof planes and the gable are fills only; one dim crease runs along the eave,
- * up the gable and along the ridge. Maybe a chimney.
- */
-function house(P, b) {
-  const { x0, y0, x1, y1, z0 = 0, z1, ridge, rh } = b;
-  if (!ridge) return box(P, b, 'sb-block');
-  const poly = (cls, list) => `<polygon class="${cls}" points="${pts(P, list)}"/>`;
-  const zr = z1 + rh, xc = (x0 + x1) / 2, yc = (y0 + y1) / 2;
-  const R = ridge === 'x' ? [[x0, yc, zr], [x1, yc, zr]] : [[xc, y0, zr], [xc, y1, zr]];
-  const corners = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]].flatMap(([x, y]) => [P(x, y, z0), P(x, y, z1)]);
-  const sil = dPath(hull([...corners, ...R.map((q) => P(...q))]));
-  let s = `<g class="sb-block"><path class="f-s" d="${sil}"/>`;
-  let crease, chimney = null;
-  if (ridge === 'x') {
-    s += poly('sb-roof r-back', [[x0, yc, zr], [x1, yc, zr], [x1, y1, z1], [x0, y1, z1]])
-      + poly('sb-roof r-front', [[x0, y0, z1], [x1, y0, z1], [x1, yc, zr], [x0, yc, zr]])
-      + poly('r-gable', [[x0, y0, z1], [x0, y1, z1], [x0, yc, zr]]);
-    crease = [[x1, y0, z1], [x0, y0, z1], [x0, yc, zr], [x1, yc, zr]];
-    if (b.chimney) { const cx = x0 + (x1 - x0) * 0.3; chimney = { x0: cx - 0.8, x1: cx + 0.8, y0: yc - 0.8, y1: yc + 0.8 }; }
-  } else {
-    s += poly('sb-roof r-back', [[xc, y0, zr], [xc, y1, zr], [x1, y1, z1], [x1, y0, z1]])
-      + poly('sb-roof r-front', [[x0, y0, z1], [x0, y1, z1], [xc, y1, zr], [xc, y0, zr]])
-      + poly('r-gable', [[x0, y0, z1], [x1, y0, z1], [xc, y0, zr]]);
-    crease = [[x0, y1, z1], [x0, y0, z1], [xc, y0, zr], [xc, y1, zr]];
-    if (b.chimney) { const cy = y0 + (y1 - y0) * 0.6; chimney = { x0: xc - 0.8, x1: xc + 0.8, y0: cy - 0.8, y1: cy + 0.8 }; }
-  }
-  s += `<path class="k-sil nf" d="${sil}"/><path class="k-cr nf" d="${dPath(crease.map((q) => P(...q)), false)}"/></g>`;
-  if (chimney) s += box(P, { ...chimney, z0: zr - 1, z1: zr + 1.6 }, 'sb-chimney');
-  return s;
-}
-
 /** Existing city (+ optional extras such as pylons), sorted far → near. */
 function drawCity(P, extras = []) {
   return [...DISTRICT.parcels, DISTRICT.hall, ...extras]
     .sort((a, b) => (b.x0 + b.x1 + b.y0 + b.y1) - (a.x0 + a.x1 + a.y0 + a.y1))
-    .map((b) => (b.hall ? box(P, b, 'sb-hall') : b.pylon ? box(P, b, 'sb-pylon') : house(P, b)))
+    .map((b) => box(P, b, b.hall ? 'sb-hall' : b.pylon ? 'sb-pylon' : 'sb-block'))
     .join('');
 }
 
@@ -575,27 +520,37 @@ const SKETCHES = {
 `;
   },
 
-  /* S4 — same view, wind lines at street level and deck level */
+  /* S4 — same view, static wind vectors at street level and deck level */
   wind() {
     const P = isoP(160, 139, 0.39);
     const base = districtBase(P);
-    // a wind line, split into pieces wherever it would leave the given area
-    const line = (y, z, cls, wob, from, to, inside) => {
-      const runs = [];
-      let run = [];
-      for (let x = from; x <= to; x += 8) {
-        if (inside(x, y)) run.push(P(x, y + Math.sin(x * 0.05 + y) * wob, z).map(f).join(','));
-        else if (run.length) { runs.push(run); run = []; }
+    // one wind vector: shaft along the (slightly veering) flow direction, arrowhead in screen space
+    const vec = (x, y, z, len, cls) => {
+      const a = Math.sin(x * 0.05 + y) * 0.22;
+      const [x0, y0] = P(x, y, z);
+      const [x1, y1] = P(x + len * Math.cos(a), y + len * Math.sin(a), z);
+      const t = Math.atan2(y1 - y0, x1 - x0), h = 2.4;
+      const head = (s) => `${f(x1 - h * Math.cos(t + s))} ${f(y1 - h * Math.sin(t + s))}`;
+      return `<path class="${cls}" d="M${f(x0)} ${f(y0)} L${f(x1)} ${f(y1)} M${head(0.5)} L${f(x1)} ${f(y1)} L${head(-0.5)}"/>`;
+    };
+    // a row of vectors, kept where both tail and tip lie inside the given area
+    const row = (y, z, len, cls, from, to, step, inside) => {
+      let out = '';
+      for (let x = from; x <= to; x += step) {
+        const l = len * (0.75 + 0.25 * Math.sin(x * 0.03 + y * 0.1));   // speed varies along the row
+        if (inside(x, y) && inside(x + l, y)) out += vec(x, y, z, l, cls);
       }
-      if (run.length) runs.push(run);
-      return runs.filter((r) => r.length > 1).map((r) => `<polyline class="${cls}" points="${r.join(' ')}"/>`).join('');
+      return out;
     };
     const onPlate = (x, y) => insideRects(DISTRICT.plate.rects, x, y);
-    const street = [-10, 70, 150, 230].map((y) => line(y, 1, 'sb-flow', 2, -96, 316, onPlate)).join('');
-    const deck = [62, 86, 110, 134, 158].map((y) => line(y, 52, 'sb-flow sb-flow--fast', 3, 20, 300, () => true)).join('');
+    const street = [-10, 70, 150, 230].map((y) => row(y, 1, 11, 'sb-vec', -96, 316, 22, onPlate)).join('');
+    const deck = [62, 86, 110, 134, 158].map((y) => row(y, 52, 20, 'sb-vec sb-vec--deck', 20, 290, 30, () => true)).join('');
+    // sheltered corners: a static curl with an arrowhead on its open end
     const eddies = [[70, 30], [150, 110], [230, 190]].map(([x, y]) => {
       const [ex, ey] = P(x, y, 1);
-      return `<ellipse class="sb-eddy" cx="${f(ex)}" cy="${f(ey)}" rx="6" ry="3.5"/>`;
+      const pt = (deg) => [ex + 6 * Math.cos(deg * Math.PI / 180), ey + 3.5 * Math.sin(deg * Math.PI / 180)];
+      const [sx, sy] = pt(30), [tx, ty] = pt(330);
+      return `<path class="sb-eddy" d="M${f(sx)} ${f(sy)} A6 3.5 0 1 1 ${f(tx)} ${f(ty)} M${f(tx - 2.4)} ${f(ty - 1.2)} L${f(tx)} ${f(ty)} L${f(tx - 0.6)} ${f(ty + 2.2)}"/>`;
     }).join('');
     const [ax, ay] = P(-125, 110, 0);
     return `
