@@ -3,7 +3,7 @@
   "weeks": 18,
   "phases": [
     {
-      "label": "Package 1 · 3-min film S1–S9",
+      "label": "Package 1 · 3-min film S1–S10",
       "start": "2026-10-28",
       "end": "2027-01-15"
     },
@@ -50,55 +50,61 @@
         {
           "label": "S1 Vienna from above (heat map)",
           "start": "2026-11-16",
-          "end": "2026-12-04",
+          "end": "2026-11-20",
           "tone": "heat"
         },
         {
           "label": "S2 Westbahnhof: the district and its border",
-          "start": "2026-11-09",
+          "start": "2026-11-16",
           "end": "2026-11-20",
           "tone": "neutral"
         },
         {
           "label": "S3 Raumpark: a second city, one level up",
-          "start": "2026-11-16",
+          "start": "2026-11-23",
           "end": "2026-11-27",
           "tone": "park"
         },
         {
           "label": "S4 Layers: what the Raumpark is made of",
-          "start": "2026-12-14",
-          "end": "2026-12-18",
+          "start": "2026-11-30",
+          "end": "2026-12-04",
           "tone": "park"
         },
         {
           "label": "S5 Westbahnhof sun & shade (summer / winter)",
-          "start": "2026-11-16",
-          "end": "2026-12-11",
+          "start": "2026-11-30",
+          "end": "2026-12-04",
           "tone": "sun"
         },
         {
           "label": "S6 Westbahnhof heat: without / with",
-          "start": "2026-11-16",
-          "end": "2026-12-04",
+          "start": "2026-12-07",
+          "end": "2026-12-11",
           "tone": "heat"
         },
         {
+          "label": "S10 Green space & housing",
+          "start": "2026-12-07",
+          "end": "2026-12-11",
+          "tone": "park"
+        },
+        {
           "label": "S7 Window & model split screen",
-          "start": "2026-11-30",
-          "end": "2027-01-08",
+          "start": "2026-12-14",
+          "end": "2026-12-18",
           "tone": "sun"
         },
         {
-          "label": "S8 Quality of sunlight",
-          "start": "2026-12-07",
-          "end": "2027-01-08",
+          "label": "S8 Quality of sunlight & wind",
+          "start": "2026-12-14",
+          "end": "2026-12-18",
           "tone": "sun"
         },
         {
           "label": "S9 Greenery & solar income",
-          "start": "2026-11-30",
-          "end": "2026-12-18",
+          "start": "2027-01-04",
+          "end": "2027-01-08",
           "tone": "sun"
         },
         {
@@ -169,22 +175,6 @@
     {
       "tone": "sun",
       "label": "Sun / solar"
-    },
-    {
-      "tone": "wind",
-      "label": "Wind"
-    },
-    {
-      "tone": "culture",
-      "label": "Culture"
-    },
-    {
-      "tone": "health",
-      "label": "Health & wellbeing"
-    },
-    {
-      "tone": "res",
-      "label": "Residential"
     },
     {
       "tone": "park",

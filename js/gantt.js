@@ -48,7 +48,9 @@ export function renderGantt(el, data) {
   const end = start + days * DAY;
   const pct = (t) => ((t - start) / DAY / days) * 100;
   const breaks = (data.breaks ?? []).map((b) => [parse(b.start), parse(b.end) + DAY, b.label]);
-  const workingWeeks = (a, b) => subtract(a, b, breaks).reduce((n, [x, y]) => n + (y - x) / DAY, 0) / 7;
+  // working days (Mon–Fri) outside the breaks, as weeks of five days
+  const weekdays = (x, y) => { let n = 0; for (let t = x; t < y; t += DAY) { const d = new Date(t).getUTCDay(); if (d > 0 && d < 6) n++; } return n; };
+  const workingWeeks = (a, b) => Math.round(subtract(a, b, breaks).reduce((n, [x, y]) => n + weekdays(x, y), 0) / 5 * 10) / 10;
 
   /* ---- scale: months + weeks ---- */
   let months = '';

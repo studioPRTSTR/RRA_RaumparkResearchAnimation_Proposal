@@ -267,9 +267,46 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
 
 /* big screen: as wide as the column, but short enough that the timeline stays in view */
 .sb-screen { width: min(100%, max(560px, calc((100svh - 330px) * 16 / 9))); justify-self: center; }
+.sb-screen__stage { position: relative; }
 .sb-screen__view { aspect-ratio: 16 / 9; position: relative; overflow: hidden; }
+/* progress through the whole film: a hairline, centred near the bottom of the picture */
+.sb-progress {
+  position: absolute; left: 50%; bottom: 5%; width: 38%; height: 1.5px; transform: translateX(-50%);
+  background: color-mix(in srgb, var(--ink) 18%, transparent); pointer-events: none;
+}
+.sb-progress i { display: block; width: 0; height: 100%; background: color-mix(in srgb, var(--ink) 65%, transparent); }
 .sb-sketch { animation: sb-in 0.45s ease both; }
 .sb-screen.is-paused * { animation-play-state: paused !important; }
+.sb-screen:focus { outline: none; }
+
+/* fullscreen: the screen fills the display, letterboxed at 16:9, caption as a strip below */
+.sb-fs-btn i {   /* four corner brackets */
+  --c: linear-gradient(currentColor, currentColor);
+  width: 11px; height: 11px;
+  background: var(--c) 0 0 / 4px 1.5px, var(--c) 0 0 / 1.5px 4px, var(--c) 100% 0 / 4px 1.5px, var(--c) 100% 0 / 1.5px 4px,
+    var(--c) 0 100% / 4px 1.5px, var(--c) 0 100% / 1.5px 4px, var(--c) 100% 100% / 4px 1.5px, var(--c) 100% 100% / 1.5px 4px;
+  background-repeat: no-repeat;
+}
+.sb-fs-tc, .sb-fs-exit { display: none; }
+.sb-screen:fullscreen, .sb-screen.is-full {
+  width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;
+  border: 0; background: var(--paper);
+}
+.sb-screen.is-full { position: fixed; inset: 0; z-index: 1000; height: 100dvh; }
+.sb-screen:fullscreen .sb-screen__stage, .sb-screen.is-full .sb-screen__stage { width: min(100vw, calc((100dvh - 40px) * 16 / 9)); }
+.sb-screen:fullscreen .sb-screen__view, .sb-screen.is-full .sb-screen__view { cursor: pointer; }
+.sb-screen:fullscreen figcaption, .sb-screen.is-full figcaption {
+  width: min(100vw, calc((100dvh - 40px) * 16 / 9)); align-items: center; padding: 8px 16px; border-top-color: transparent;
+}
+.sb-screen:fullscreen .sb-fs-tc, .sb-screen.is-full .sb-fs-tc { display: inline; margin-left: auto; color: var(--ink-2); }
+.sb-screen:fullscreen .sb-cap-note, .sb-screen.is-full .sb-cap-note { display: none; }
+.sb-screen:fullscreen .sb-fs-exit, .sb-screen.is-full .sb-fs-exit {
+  display: inline; border: var(--hair) solid var(--rule-strong); border-radius: 2px; background: transparent;
+  padding: 3px 8px; font: inherit; color: inherit; cursor: pointer;
+}
+.sb-fs-exit:hover { border-color: var(--ink); color: var(--ink); }
+.sb-screen::backdrop { background: var(--paper); }
+html.sb-fs-lock { overflow: hidden; }
 @keyframes sb-in { from { opacity: 0; } to { opacity: 1; } }
 
 /* hairline figures (js/hairline/): a 5:4 stage centred on the 16:9 screen, in the drawing set's tokens */
@@ -369,8 +406,34 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
 /* S4: solar heat map */
 .hm-edge { stroke: color-mix(in srgb, var(--ink) 55%, transparent); stroke-width: 0.3; stroke-linejoin: round; }
 .hm-roof { fill: none; }
-/* S9: sun hours — the deck keeps a clear edge over the raster */
+/* S8: sun hours — the deck keeps a clear edge over the raster */
 .sh-deck-edge { fill: none; stroke: color-mix(in srgb, var(--park) 60%, var(--ink)); stroke-width: 0.7; stroke-linejoin: round; }
+/* S8: the wind on the plain model, still lines only */
+.sh-flow { fill: none; stroke: var(--wind); stroke-width: 0.45; stroke-linecap: round; stroke-linejoin: round; }
+.sh-flow--deck { stroke: color-mix(in srgb, var(--wind) 75%, var(--ink)); stroke-width: 0.55; }
+.sh-eddy { stroke-width: 0.4; }
+
+/* S10: green space and housing. All grey; one quantity at a time in colour (timed via --shot):
+   the city's parks 8–62 %, the Raumpark's green 38–62 %, the housing (with its storeys) from 66 % */
+[data-sketch="green-living"] {
+  --gl-off: color-mix(in srgb, var(--ink) 9%, var(--paper));
+  --gl-off-s: color-mix(in srgb, var(--ink) 16%, var(--paper));
+}
+[data-sketch="green-living"] :is(.sb-block, .sb-hall, .sb-pylon, .gl-deck, .gl-sol) .f-t { fill: var(--gl-off); }
+[data-sketch="green-living"] :is(.sb-block, .sb-hall, .sb-pylon, .gl-deck, .gl-sol) .f-s { fill: var(--gl-off-s); }
+[data-sketch="green-living"] .sb-park { --off: var(--gl-off); --on: color-mix(in srgb, var(--park) 60%, var(--paper)); animation: gl-city var(--shot, 20s) linear both; }
+[data-sketch="green-living"] .sb-tree { --off: var(--gl-off-s); --on: var(--park); animation: gl-city var(--shot, 20s) linear both; }
+[data-sketch="green-living"] :is(.gl-deck, .gl-green) .f-t { --off: var(--gl-off); --on: color-mix(in srgb, var(--park) 60%, var(--paper)); animation: gl-park var(--shot, 20s) linear both; }
+[data-sketch="green-living"] :is(.gl-deck, .gl-green) .f-s { --off: var(--gl-off-s); --on: color-mix(in srgb, var(--park) 85%, var(--ink)); animation: gl-park var(--shot, 20s) linear both; }
+[data-sketch="green-living"] .gl-res .f-t { --off: var(--gl-off); --on: color-mix(in srgb, var(--use-res) 50%, var(--paper)); animation: gl-res var(--shot, 20s) linear both; }
+[data-sketch="green-living"] .gl-res .f-s { --off: var(--gl-off-s); --on: color-mix(in srgb, var(--use-res) 85%, var(--paper)); animation: gl-res var(--shot, 20s) linear both; }
+.gl-floors { fill: none; stroke: color-mix(in srgb, var(--use-res) 40%, var(--ink)); stroke-width: 0.22; animation: gl-floors var(--shot, 20s) linear both; }
+.gl-bar--green { fill: var(--park); }
+.gl-bar--res { fill: var(--use-res); }
+@keyframes gl-city { 0%, 8% { fill: var(--off); } 11%, 62% { fill: var(--on); } 66%, 100% { fill: var(--off); } }
+@keyframes gl-park { 0%, 38% { fill: var(--off); } 41%, 62% { fill: var(--on); } 66%, 100% { fill: var(--off); } }
+@keyframes gl-res { 0%, 66% { fill: var(--off); } 70%, 100% { fill: var(--on); } }
+@keyframes gl-floors { 0%, 66% { opacity: 0; } 70%, 100% { opacity: 1; } }
 .hm-pylon .f-s, .hm-pylon .f-t { fill: rgb(150, 186, 220); }
 .hm-pylon .k-sil, .hm-pylon .k-cr, .hm-deck .k-sil, .hm-deck .k-cr { stroke: color-mix(in srgb, var(--ink) 55%, transparent); stroke-width: 0.3; }
 .hm-deck .f-t { fill: rgb(196, 214, 232); }
@@ -380,11 +443,28 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
 .hm-deck .f-s { fill: rgb(150, 186, 220); }
 /* S6: layers */
 .ly-drop { fill: none; stroke: var(--ink-3); stroke-width: 0.5; }
-/* S2: the surrounding buildings fade back after a moment (timed to the shot via --shot) */
-.db-ctx path { animation: db-grey var(--shot, 15s) linear both; }
-.db-ctx { animation: db-fade var(--shot, 15s) linear both; }
-@keyframes db-grey { 0%, 25% { fill: var(--bldg); stroke-opacity: 1; } 50%, 100% { fill: var(--paper-3); stroke-opacity: 0.2; } }
-@keyframes db-fade { 0%, 25% { opacity: 1; } 50%, 100% { opacity: 0.35; } }
+/* S4: while the stack is open, one part at a time in colour, the rest grey and faded back:
+   uses 36–49 %, structure 49–62 %, deck 62–75 % of the shot; all in colour again as it closes */
+.ly-struct .sb-pylon .f-s, .ly-struct .sb-pylon .f-t { fill: color-mix(in srgb, #3f78c8 70%, var(--paper)); }
+.ly-struct .ly-drop { stroke: color-mix(in srgb, #3f78c8 80%, var(--paper)); }
+.ly-city, .ly-struct, .ly-deck, .ly-uses { animation: var(--shot, 15s) linear both; }
+.ly-city { animation-name: ly-city; }
+.ly-uses { animation-name: ly-uses; }
+.ly-struct { animation-name: ly-struct; }
+.ly-deck { animation-name: ly-deck; }
+@keyframes ly-city   { 0%, 35% { opacity: 1; } 37%, 75% { opacity: 0.3; } 77%, 100% { opacity: 1; } }
+@keyframes ly-uses   { 0%, 48% { filter: none; opacity: 1; } 50%, 75% { filter: grayscale(1); opacity: 0.3; } 77%, 100% { filter: none; opacity: 1; } }
+@keyframes ly-struct { 0%, 35% { filter: none; opacity: 1; } 37%, 48% { filter: grayscale(1); opacity: 0.3; } 50%, 61% { filter: none; opacity: 1; }
+                       63%, 75% { filter: grayscale(1); opacity: 0.3; } 77%, 100% { filter: none; opacity: 1; } }
+@keyframes ly-deck   { 0%, 35% { filter: none; opacity: 1; } 37%, 61% { filter: grayscale(1); opacity: 0.3; } 63%, 100% { filter: none; opacity: 1; } }
+/* S2: the surrounding buildings vanish into the background after a moment (timed to the shot via --shot) */
+.db-ctx path { animation: db-grey var(--shot, 15s) ease-in both; }
+.db-ctx { animation: db-fade var(--shot, 15s) ease-in both; }
+@keyframes db-grey { 0%, 15% { fill: var(--bldg); stroke-opacity: 1; } 25%, 100% { fill: var(--paper); stroke-opacity: 0; } }
+@keyframes db-fade { 0%, 15% { opacity: 1; } 25%, 100% { opacity: 0; } }
+/* S2: placeholder for the text block (heading bar, lines) */
+.db-ph__line { fill: var(--ink-3); opacity: 0.55; }
+.db-ph__head { fill: var(--ink-2); opacity: 0.9; }
 .dh-deck .f-t { fill-opacity: 0.35; }
 .dh-deck .f-s { fill-opacity: 0.55; }
 .sb-heat circle { animation: sb-heat 3.6s ease-in-out infinite; animation-delay: var(--d, 0ms); }
@@ -593,6 +673,7 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
   .gantt__bar { transform: none; }
   .sb-frame * { animation: none !important; }
   .sb-zoom rect { transform: none; opacity: 1; }
+  .db-ctx { opacity: 0; }
 }
 
 /* ---------------------------------------------------------------- forced colours */

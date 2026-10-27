@@ -875,10 +875,18 @@ const SKETCHES = {
       .sort((p, q) => (q.x0 + q.x1 + q.y0 + q.y1) - (p.x0 + p.x1 + p.y0 + p.y1))
       .map((b) => drawPiece(P, b, b.ctx ? ' db-ctx' : ''))
       .join('');
+    // placeholder for the text about the district, in the free corner once the city has faded:
+    // a heading bar and a few lines that draw in one after the other
+    const dur = `dur="${shot}s" fill="freeze"`, at = (k) => 0.26 + k * 0.025;
+    const grow = (k, w) => `<animate attributeName="width" ${dur} values="0;0;${w};${w}" keyTimes="0;${f2(at(k))};${f2(at(k) + 0.04)};1"/>`;
+    const lines = [[0, 46, 3], [1, 66, 1.6], [2, 70, 1.6], [3, 62, 1.6], [4, 38, 1.6]];
+    const text = `<g class="db-ph">
+      ${lines.map(([k, w, h], i) => `<rect class="db-ph__line${i ? '' : ' db-ph__head'}" x="18" y="${i ? 20 + i * 7 : 18}" width="0" height="${h}">${grow(k, w)}</rect>`).join('')}
+    </g>`;
     return `
       <rect class="sb-bg" width="320" height="180"/>
       ${groundSvg(P, { context: false, edge: false })}
-      ${buildings}`;
+      ${buildings}${text}`;
   },
 
   /* S3 — Raumpark: city design is climate design. Urban expansion and densification as populated
@@ -970,7 +978,7 @@ const SKETCHES = {
   'district-heat'(id, shot = 15) {
     const sc = 0.39, P = isoP(160, 139, sc), D = DISTRICT, HM = heatMaps();
     const loop = `dur="${shot}s" fill="freeze"`;
-    const fadeIn = `<animate attributeName="opacity" ${loop} values="0;0;1;1" keyTimes="0;0.4;0.55;1"/>`;
+    const fadeIn = `<animate attributeName="opacity" ${loop} values="0;0;1;1" keyTimes="0;0.4;0.44;1"/>`;
     const [ex, ey] = P(HM.x0, HM.y0), r = HM.RES * sc;
     const matrix = `matrix(${f(C30 * r)} ${f(-0.5 * r)} ${f(-C30 * r)} ${f(-0.5 * r)} ${f(ex)} ${f(ey)})`;
     const scene = (k, raumpark) => {
@@ -1077,13 +1085,14 @@ const SKETCHES = {
 `;
   },
 
-  /* S6 — layers: the same district taken apart. The city stays on the ground; the pylons, the
-     deck and the uses lift away one after the other, thin lines mark where the pylons land, and
-     the stack closes again. */
+  /* S4 — layers: the same district taken apart. The city stays on the ground; the pylons, the
+     deck and the uses lift away one after the other, thin lines mark where the pylons land. While
+     the stack is open, one part after the other is shown in colour with the rest grey: the uses,
+     then the structure (pylons), then the deck (CSS .ly-* on --shot). Then the stack closes again. */
   layers(id, shot = 10) {
     const sc = 0.34, P = isoP(160, 168, sc), D = DISTRICT;
     const LIFT = [0, 24, 58, 92];                                     // world metres per layer when open
-    const kt = (i) => { const d = i * 0.04; return `0;${f2(0.08 + d)};${f2(0.36 + d)};${f2(0.7 - d)};${f2(0.92 - d)};1`; };
+    const kt = (i) => { const d = i * 0.04; return `0;${f2(0.04 + d)};${f2(0.24 + d)};${f2(0.86 - d)};${f2(0.98 - d)};1`; };
     const SPL = '0 0 1 1;.45 0 .2 1;0 0 1 1;.45 0 .2 1;0 0 1 1';
     const lift = (i) => `<animateTransform attributeName="transform" type="translate" dur="${shot}s" fill="freeze" calcMode="spline"
         values="0 0;0 0;0 ${f(-LIFT[i] * sc)};0 ${f(-LIFT[i] * sc)};0 0;0 0" keyTimes="${kt(i)}" keySplines="${SPL}"/>`;
@@ -1097,12 +1106,11 @@ const SKETCHES = {
     const pylons = D.pylons.slice().sort(byDepth).map((b) => box(P, b, 'sb-pylon')).join('');
     return `
       <rect class="sb-bg" width="320" height="180"/>
-      ${groundSvg(P, { context: false })}
-      ${drawCity(P)}
-      ${drops}
-      <g>${lift(1)}${pylons}</g>
-      <g>${lift(2)}${deckSlab(P)}</g>
-      <g>${lift(3)}${useBoxes(P, 'all')}</g>`;
+      <g class="ly-city">${groundSvg(P, { context: false })}${drawCity(P)}</g>
+      <g class="ly-struct">${drops}</g>
+      <g>${lift(1)}<g class="ly-struct">${pylons}</g></g>
+      <g>${lift(2)}<g class="ly-deck">${deckSlab(P)}</g></g>
+      <g>${lift(3)}<g class="ly-uses">${useBoxes(P, 'all')}</g></g>`;
   },
 
   /* S7 — overview → the Raumpark turns transparent → push-in on one window → the view out of
@@ -1213,8 +1221,11 @@ const SKETCHES = {
 
   /* S9 — quality of sunlight: the whole of 20 March merged in one picture. The ground, the roofs and
      the deck show how many hours of direct sun they get over the day, sky blue (little) to light
-     orange (all day), shaded by the city, the deck and the use solids. */
-  'sun-hours'(id) {
+     orange (all day), shaded by the city, the deck and the use solids. Then the sun picture gives
+     way to the plain model and the wind, as still lines: west → east through the streets and over
+     the deck, rising over the use solids; behind every obstacle the flow breaks up into a wobbling
+     wake and small eddies. */
+  'sun-hours'(id, shot = 20) {
     const sc = 0.39, P = isoP(160, 139, sc), D = DISTRICT, dk = D.deck, SH = sunHoursMaps();
     const [ex, ey] = P(SH.x0, SH.y0), r = SH.RES * sc;
     const matrix = `matrix(${f(C30 * r)} ${f(-0.5 * r)} ${f(-C30 * r)} ${f(-0.5 * r)} ${f(ex)} ${f(ey)})`;
@@ -1235,6 +1246,70 @@ const SKETCHES = {
           <path class="hm-edge hm-roof" fill-rule="evenodd" d="${roof}"/>`;
       }).join('');
     const solids = ALL_USE_BOXES.slice().sort(byDepth).map((b) => useVolume(P, b, `use-box use-${b.use} is-focus`)).join('');
+
+    // ---- wind, from W0 of the shot on: streamlines in 3 m steps, west → east
+    const W0 = 0.4, W1 = 0.46, step = 3;
+    const inPoly = (poly, x, y) => {
+      let c = false;
+      for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+        const [xi, yi] = poly[i], [xj, yj] = poly[j];
+        if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c;
+      }
+      return c;
+    };
+    // one line: rides on z0 + the (smoothed) obstacle height under it, kept where ok(x, y); past an
+    // obstacle its wake makes it wobble, dying away downstream
+    const stream = (y, z0, from, to, hit, ok, ph) => {
+      const xs = []; for (let x = from; x <= to; x += step) xs.push(x);
+      const raw = xs.map((x) => hit(x, y));
+      const lift = raw.map((_, i) => { let m = 0; for (let k = -3; k <= 3; k++) m = Math.max(m, raw[i + k] ?? 0); return m; })
+        .map((_, i, a) => { let s = 0, n = 0; for (let k = -2; k <= 2; k++) if (a[i + k] !== undefined) { s += a[i + k]; n++; } return s / n; });
+      let wake = 0, d = '', pen = false;
+      xs.forEach((x, i) => {
+        // smooth over an obstacle; the wake starts at its trailing edge
+        wake = raw[i] ? 0 : raw[i - 1] ? 1 : wake * 0.88;
+        const dy = wake * 2.2 * Math.sin(x * 0.25 + ph) + 0.7 * Math.sin(x * 0.045 + ph);
+        if (!ok(x, y + dy)) { pen = false; return; }
+        const [sx, sy] = P(x, y + dy, z0 + lift[i] + wake * 1.2 * Math.sin(x * 0.27 + ph * 2));
+        d += `${pen ? 'L' : 'M'}${f(sx)} ${f(sy)}`; pen = true;
+      });
+      return d;
+    };
+    const onPlate = (x, y) => insideRects(D.plate.rects, x, y);
+    const pylonAt = (x, y) => (D.pylons.some((p) => x >= p.x0 - 2 && x <= p.x1 && Math.abs(y - (p.y0 + p.y1) / 2) < 6) ? 1 : 0);
+    const solidAt = (x, y) => Math.max(0, ...ALL_USE_BOXES.map((u) => (inPoly(u.poly, x, y) ? u.z1 - u.z0 + 3 : 0)));
+    const ground = [70, 150].flatMap((sy) => [-5, 0, 5].map((o) => sy + o)).concat([D.plate.y0 + 4, D.plate.y1 - 4])
+      .map((y, i) => stream(y, 1.5, D.plate.x0, D.plate.x1, pylonAt, onPlate, i * 1.7)).join('');
+    let deckLines = '';
+    for (let y = dk.y0 + 4, i = 0; y <= dk.y1 - 4; y += 9, i++) {
+      deckLines += stream(y, dk.z1 + 2, dk.x0, dk.x1, solidAt, (x, yy) => insideRects(dk.rects, x, yy), i * 2.3);
+    }
+    // eddies: little spirals in the lee of each solid and of the pylons, the flow running round them
+    const spiral = (x, y, z, s, turn) => {
+      const [cx, cy] = P(x, y, z);
+      let d = '';
+      for (let t = 0; t <= 3.2 * Math.PI; t += 0.35) {
+        const r = s * (0.25 + t / (3.2 * Math.PI)), a = turn * t;
+        d += `${d ? 'L' : 'M'}${f(cx + r * Math.cos(a))} ${f(cy + 0.55 * r * Math.sin(a))}`;
+      }
+      return d;
+    };
+    const lee = ALL_USE_BOXES.flatMap((u, i) => {
+      const xm = Math.max(...u.poly.map((q) => q[0]));
+      const ys = u.poly.filter((q) => q[0] >= xm - 8).map((q) => q[1]);
+      const ym = (Math.min(...ys) + Math.max(...ys)) / 2;
+      return insideRects(dk.rects, xm + 7, ym) ? [spiral(xm + 7, ym, dk.z1 + 2, 4.2, i % 2 ? 1 : -1)] : [];
+    }).concat(D.pylons.map((p, i) => spiral(p.x1 + 8, (p.y0 + p.y1) / 2 + (i % 2 ? 3 : -3), 1.5, 3.2, i % 2 ? 1 : -1))).join('');
+    // the wind is shown on its own: the sun picture gives way to the plain grey model, and the
+    // streamlines stand still on it
+    const plain = `${groundSvg(P)}${drawCity(P, D.pylons)}${deckSlab(P)}
+      ${ALL_USE_BOXES.slice().sort(byDepth).map((b) => useVolume(P, b, 'use-box sb-pav')).join('')}`;
+    const wind = `
+      <g class="sh-wind" opacity="0"><animate attributeName="opacity" dur="${shot}s" fill="freeze" values="0;0;1;1" keyTimes="0;${W0};${W1};1"/>
+        <rect class="sb-bg" width="320" height="180"/>
+        <g class="sh-plain">${plain}</g>
+        <path class="sh-flow" d="${ground}"/><path class="sh-flow sh-flow--deck" d="${deckLines}"/><path class="sh-flow sh-eddy" d="${lee}"/>
+      </g>`;
     return `
       <rect class="sb-bg" width="320" height="180"/>
       <defs>${defs.join('')}</defs>
@@ -1245,10 +1320,53 @@ const SKETCHES = {
       <g clip-path="url(#${id}-deck)"><use href="#${id}-up" transform="translate(0 ${f(-dk.z1 * sc)})"/></g>
       <path class="sh-deck-edge" fill-rule="evenodd" d="${loopsPath(P, dk.loops, dk.z1)}"/>
       ${solids}
-      <rect x="14" y="160" width="70" height="5" fill="url(#${id}-lg)"/>`;
+      <rect x="14" y="160" width="70" height="5" fill="url(#${id}-lg)"/>
+      ${wind}`;
   },
 
-  /* S10 — greenery & solar income: heat map of yearly sun on the deck + what to plant / where PV pays */
+  /* S10 — green space and housing, in figures. The model stays grey; one quantity at a time is in
+     colour, with a placeholder for its figure top right: the green space of today's city (parks),
+     then the Raumpark's green added on top (planted deck and green volume), then the residential
+     floors of the city and the Raumpark's housing (CSS .gl-* on --shot). */
+  'green-living'(id, shot = 15) {
+    const sc = 0.36, P = isoP(146, 142, sc), D = DISTRICT;
+    // the city with its storeys: a line every 3.5 m on the outer walls, shown with the housing
+    const area = (l) => Math.abs(l.reduce((s, [x, y], i) => { const [u, v] = l[(i + 1) % l.length]; return s + x * v - u * y; }, 0));
+    const outer = (b) => b.loops.reduce((m, l) => (area(l) > area(m) ? l : m));
+    const floors = (b) => frontFaces([outer(b)], 0, b.z1).map((fc) => {
+      let d = '';
+      for (let z = 3.5; z < b.z1 - 1; z += 3.5) {
+        const [ax, ay] = P(...fc.a, z), [bx, by] = P(...fc.b, z);
+        d += `M${f(ax)} ${f(ay)}L${f(bx)} ${f(by)}`;
+      }
+      return d;
+    }).join('');
+    const city = [...D.blocks, D.hall, ...D.pylons]
+      .sort((a, b) => (b.x0 + b.x1 + b.y0 + b.y1) - (a.x0 + a.x1 + a.y0 + a.y1))
+      .map((b) => (b.block ? `${prism(P, b.loops, 0, b.z1, 'sb-block gl-res')}<path class="gl-floors" d="${floors(b)}"/>` : drawPiece(P, b)))
+      .join('');
+    const solids = ALL_USE_BOXES.slice().sort(byDepth)
+      .map((b) => useVolume(P, b, `use-box gl-sol${b.use === 'green' ? ' gl-green' : b.use === 'res' ? ' gl-res' : ''}`)).join('');
+    // figures, top right: per quantity a label placeholder and a bar that grows when it is shown
+    const dur = `dur="${shot}s" fill="freeze"`;
+    const row = (k, a, w, cls) => {
+      const y = 22 + k * 15;
+      return `<g opacity="0"><animate attributeName="opacity" ${dur} values="0;0;1;1" keyTimes="0;${f2(a)};${f2(a + 0.03)};1"/>
+        <rect class="db-ph__line" x="236" y="${y}" width="${k === 1 ? 22 : 30}" height="1.6"/>
+        <rect class="gl-bar ${cls}" x="236" y="${y + 4.5}" width="0" height="3">
+          <animate attributeName="width" ${dur} values="0;0;${w};${w}" keyTimes="0;${f2(a)};${f2(a + 0.08)};1"/></rect></g>`;
+    };
+    return `
+      <rect class="sb-bg" width="320" height="180"/>
+      ${groundSvg(P, { context: false })}
+      ${city}
+      <g class="gl-deck">${deckSlab(P)}</g>
+      ${solids}
+      <rect class="db-ph__line db-ph__head" x="236" y="14" width="40" height="2.4"/>
+      ${row(0, 0.1, 30, 'gl-bar--green')}${row(1, 0.4, 46, 'gl-bar--green')}${row(2, 0.68, 64, 'gl-bar--res')}`;
+  },
+
+  /* S9 — greenery & solar income: heat map of yearly sun on the deck + what to plant / where PV pays */
   solar() {
     const P = isoP(143, 187, 0.53);
     const D = DISTRICT, dk = D.deck, z = dk.z1;
@@ -1483,8 +1601,12 @@ function render(el, data, ctl = {}) {
           </span>` : ''}</li>`).join('')}
       </ol>
       <figure class="sb-frame sb-screen" id="sb-screen">
-        <div class="sb-screen__view" id="sb-view" role="img"></div>
-        <figcaption><span id="sb-cap"></span><span>Sketch · not final look</span></figcaption>
+        <div class="sb-screen__stage">
+          <div class="sb-screen__view" id="sb-view" role="img"></div>
+          <div class="sb-progress" aria-hidden="true"><i id="sb-prog"></i></div>
+        </div>
+        <figcaption><span id="sb-cap"></span><span class="sb-fs-tc"><span id="sb-tc2">00:00</span> / ${tc(total)}</span><span class="sb-cap-note">Sketch · not final look</span>
+          <button class="sb-fs-exit" id="sb-fs-exit" type="button">Exit fullscreen · Esc</button></figcaption>
       </figure>
 
       <div class="sb-overview">
@@ -1494,6 +1616,7 @@ function render(el, data, ctl = {}) {
           <button class="btn" id="sb-next" type="button" aria-label="Next shot">→</button>
           <span class="sb-timecode"><span id="sb-tc">00:00</span> / ${tc(total)}</span>
           <span class="sb-total">Package 1 · ${shots.length} shots · click the timeline to jump</span>
+          <button class="btn sb-fs-btn" id="sb-fs" type="button" title="Fullscreen (F)" aria-pressed="false"><i aria-hidden="true"></i><span>Fullscreen</span></button>
         </div>
         <div class="sb-scroll">
           <div class="sb-tracks" id="sb-tracks">
@@ -1518,11 +1641,11 @@ function render(el, data, ctl = {}) {
 
   const $ = (sel) => el.querySelector(sel);
   const view = $('#sb-view'), screen = $('#sb-screen'), cap = $('#sb-cap'), info = $('#sb-info');
-  const head = $('#sb-playhead'), tcEl = $('#sb-tc'), play = $('#sb-play');
+  const head = $('#sb-playhead'), tcEl = $('#sb-tc'), tcFs = $('#sb-tc2'), prog = $('#sb-prog'), play = $('#sb-play');
   const cells = [...el.querySelectorAll('.sb-cell, .sb-thumb')];
 
   // Sequenced sketches pick the moment that tells the most when motion is reduced (e.g. the window view in S4).
-  const STILL = { split: 12, 'district-heat': 12, sun: 5.5, layers: 4, 'district-border': 14, 'raumpark-rise': 14, uses: 38, 'sun-hours': 28 };
+  const STILL = { split: 12, 'district-heat': 12, sun: 5.5, layers: 4, 'district-border': 14, 'raumpark-rise': 14, uses: 38, 'sun-hours': 6, 'green-living': 13 };
   let pos = 0, cur = -1, playing = false, last = 0, visible = false, gen = 0, figure = null;
   const shotAt = (x) => Math.max(0, shots.findIndex((s) => x >= s.start && x < s.start + s.duration));
 
@@ -1579,7 +1702,8 @@ function render(el, data, ctl = {}) {
 
   const draw = () => {
     head.style.left = `${pct(pos)}%`;
-    tcEl.textContent = tc(pos);
+    tcEl.textContent = tcFs.textContent = tc(pos);
+    prog.style.width = `${pct(pos)}%`;
     if (reduced) return;
     const t = pos - shots[cur].start;
     if (figure) figure.seek(t);
@@ -1644,11 +1768,37 @@ function render(el, data, ctl = {}) {
   $('#sb-prev').addEventListener('click', () => step(-1));
   $('#sb-next').addEventListener('click', () => step(1));
   play.addEventListener('click', () => setPlaying(!playing));
+
+  /* ---- fullscreen: the screen alone, with its caption and timecode; the browser's own
+     fullscreen where there is one, else (iPhone) the screen pinned over the page ---- */
+  const fsBtn = $('#sb-fs');
+  const native = !!screen.requestFullscreen;
+  const isFull = () => (native ? document.fullscreenElement === screen : screen.classList.contains('is-full'));
+  const onFull = () => {
+    const on = isFull();
+    fsBtn.setAttribute('aria-pressed', on);
+    fsBtn.querySelector('span').textContent = on ? 'Exit fullscreen' : 'Fullscreen';
+    document.documentElement.classList.toggle('sb-fs-lock', on && !native);
+    if (on) screen.focus({ preventScroll: true });
+  };
+  const toggleFull = () => {
+    if (native) { if (isFull()) document.exitFullscreen(); else screen.requestFullscreen().catch(() => {}); }
+    else { screen.classList.toggle('is-full'); onFull(); }
+  };
+  screen.tabIndex = -1;
+  if (native) document.addEventListener('fullscreenchange', onFull);
+  fsBtn.addEventListener('click', toggleFull);
+  $('#sb-fs-exit').addEventListener('click', toggleFull);
+  view.addEventListener('dblclick', toggleFull);
+  view.addEventListener('click', () => { if (isFull()) setPlaying(!playing); });   // in fullscreen a click plays / pauses
+
   $('.sb-player').addEventListener('keydown', (e) => {
     if (e.target.closest('button') && e.key === ' ') return;
     if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
     else if (e.key === ' ') { e.preventDefault(); setPlaying(!playing); }
+    else if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleFull(); }
+    else if (e.key === 'Escape' && !native && isFull()) toggleFull();
   });
 
   /* ---- playhead runs in real time; the screen follows it from shot to shot ---- */
@@ -1673,5 +1823,9 @@ function render(el, data, ctl = {}) {
   requestAnimationFrame((n) => { last = n; loop(n); });
 
   // stop this player before the strip is rebuilt in a new order
-  return () => { alive = false; io.disconnect(); figure?.destroy(); };
+  return () => {
+    alive = false; io.disconnect(); figure?.destroy();
+    if (native) { document.removeEventListener('fullscreenchange', onFull); if (isFull()) document.exitFullscreen(); }
+    document.documentElement.classList.remove('sb-fs-lock');
+  };
 }

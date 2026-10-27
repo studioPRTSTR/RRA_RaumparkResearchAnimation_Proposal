@@ -1,7 +1,7 @@
 # Raumpark Vienna — visualisation proposal
 
 Single-page site presenting the animation & infographic proposal for Raumpark Vienna:
-a short intro, the storyboard (Package 1, 3 minutes, 9 shots) and the timetable.
+a short intro, the storyboard (Package 1, 3 minutes, 10 shots) and the timetable.
 Plain HTML, CSS and ES-module JavaScript, with no build step.
 
 Proposal by Manuel Gruber · _studiogruber
@@ -28,11 +28,14 @@ js/config.js         site location and key dates for the sun calculations
 js/vienna.js         Vienna's outline and the Danube for S1 (© OpenStreetMap contributors, ODbL) and its 23 districts (Stadt Wien – data.wien.gv.at, CC BY 4.0)
 js/gantt.js          timetable built from data/timeline.json
 js/hairline/         Hairline engine and line figure (not used by the storyboard at the moment, see below)
-data/storyboard.json shots S1–S9: duration, scale, idea, camera, graphics, data
+data/storyboard.json shots S1–S10: duration, scale, idea, camera, graphics, data
 data/timeline.json   18-week Gantt: two packages, holiday break, milestones
 ```
 
 ## Editing the storyboard
+
+**Fullscreen:** the "Fullscreen" button in the player bar (or F, or a double click on the screen)
+shows the screen alone; there a click plays / pauses, ← → step through the shots, Esc leaves.
 
 **Arranging the shots:** press "Arrange shots" above the strip, then drag the frames (or use ← →)
 into a new order; the player, timeline and shot numbers follow at once. The order is kept in this
@@ -51,7 +54,7 @@ Edit `data/storyboard.json`. Durations drive the timeline widths and timecodes; 
 zoom-level track (`city`, `district`, `street`, `room`; two values = split screen);
 `tier: "optional"` draws the shot hatched/dashed. Sketches are picked by the `sketch` key
 (`heatmap`, `district-border`, `raumpark-rise`, `district-heat`, `sun`, `split`, `layers`, `sun-hours`,
-`solar`) in `js/storyboard.js`. A shot with a `figure` key shows a Hairline figure from
+`solar`, `green-living`) in `js/storyboard.js`. A shot with a `figure` key shows a Hairline figure from
 `js/hairline/` instead; its `sketch` key then only picks the strip thumbnail.
 
 ## Hairline figures

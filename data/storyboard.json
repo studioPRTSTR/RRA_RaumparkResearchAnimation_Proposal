@@ -65,9 +65,9 @@
       "scale": [
         "district"
       ],
-      "idea": "Straight after the Raumpark has grown, the same model comes apart into its layers: the existing city stays on the ground, then the pylons over the street crossings, the deck that branches along the streets and the use solids on top lift away one after the other, thin lines marking where the pylons land. Then the stack closes again, so the viewer knows what the Raumpark is made of before the studies of sun, heat and wind.",
+      "idea": "Straight after the Raumpark has grown, the same model comes apart into its layers: the existing city stays on the ground, then the pylons over the street crossings, the deck that branches along the streets and the use solids on top lift away one after the other, thin lines marking where the pylons land. While the stack is open, one part at a time is shown in colour and everything else turns grey: first the uses, then the structure (pylons), then the deck. Then the stack closes again, so the viewer knows what the Raumpark is made of before the studies of sun, heat and wind.",
       "camera": "Isometric, the stack opens at one layer after the other",
-      "graphics": "Exploded layers · lines where the pylons land",
+      "graphics": "Exploded layers · lines where the pylons land · one layer in colour at a time, the rest grey",
       "data": "3D model of the district, split into layers",
       "transition": "Same camera, the sun"
     },
@@ -124,16 +124,16 @@
       "code": "S8",
       "tier": "core",
       "sketch": "sun-hours",
-      "title": "Quality of sunlight",
-      "kicker": "Isometric · sun hours over 20 March, in one picture",
-      "duration": 30,
+      "title": "Quality of sunlight & wind",
+      "kicker": "Isometric · sun hours over 20 March, then the wind",
+      "duration": 20,
       "scale": [
         "district"
       ],
-      "idea": "How much sun reaches the people who live here, below the Raumpark and on it. The whole of 20 March, the equinox and the usual day for daylight studies, merged into one picture: the streets, courtyards, roofs and the deck show how many hours of direct sun they get over the day, from sky blue (little) to light orange (sun all day). The shadows of the existing blocks, the deck and its volumes are all in it, so the shot shows where the new level keeps light for the city below and where it gains the best light on top.",
+      "idea": "How much sun reaches the people who live here, below the Raumpark and on it. The whole of 20 March, the equinox and the usual day for daylight studies, merged into one picture: the streets, courtyards, roofs and the deck show how many hours of direct sun they get over the day, from sky blue (little) to light orange (sun all day). The shadows of the existing blocks, the deck and its volumes are all in it, so the shot shows where the new level keeps light for the city below and where it gains the best light on top. After about 8 s the sun picture gives way to the plain model and the wind, as still lines: from the west through the streets and over the deck, rising over the use volumes; behind each volume and each pylon the flow breaks up into turbulence and small eddies, showing where the Raumpark shelters and where it stirs the air.",
       "camera": "Same isometric view, still; the camera drifts in slowly",
-      "graphics": "Sun hours on ground, roofs and deck · scale",
-      "data": "Sun position for Vienna on 20 March (calculated) · 3D model of the area and the Raumpark",
+      "graphics": "Sun hours on ground, roofs and deck · scale · then the plain model with still wind streamlines, wakes and eddies",
+      "data": "Sun position for Vienna on 20 March (calculated) · wind simulation (CFD) of the area with the Raumpark · 3D model",
       "transition": "Same camera, from light to energy"
     },
     {
@@ -142,14 +142,30 @@
       "sketch": "solar",
       "title": "Greenery & solar income",
       "kicker": "Diagram · heat map on the deck",
-      "duration": 20,
+      "duration": 15,
       "scale": [
         "district"
       ],
       "idea": "A diagram over the whole deck: a heat map of how much sun each part receives over the year, with the use volumes casting their shade. From it follows where planting thrives, where shade-loving planting belongs, and where PV pays off, with the share of each shown as bars.",
       "camera": "Top-down / isometric diagram, heat map sweeps in",
       "graphics": "Yearly sun on the deck in gold · PV on the sloped, sun-facing sides of the volumes · scale",
-      "data": "Yearly sun on the deck (calculated) · planting and PV assumptions"
+      "data": "Yearly sun on the deck (calculated) · planting and PV assumptions",
+      "transition": "Same camera, the model turns grey"
+    },
+    {
+      "code": "S10",
+      "tier": "core",
+      "sketch": "green-living",
+      "title": "Green space & housing",
+      "kicker": "Isometric · one quantity at a time, with its figure",
+      "duration": 15,
+      "scale": [
+        "district"
+      ],
+      "idea": "What the Raumpark adds, in figures. The whole model turns grey and one quantity at a time is shown in colour, with its figure top right: first the green space the district has today (its parks), then the Raumpark's green added to it (the planted deck and the green volume), so the bar for green space grows; then the residential floors, storey by storey, in the existing blocks and in the Raumpark's housing.",
+      "camera": "Same isometric view, still",
+      "graphics": "Grey model · parks, then Raumpark green, then housing with storey lines in colour · figures as label + bar (placeholders)",
+      "data": "Green space today and with the Raumpark, residential floor area, population (from the research team)"
     }
   ]
 }
