@@ -1,7 +1,7 @@
 # Raumpark Vienna — visualisation proposal
 
 Single-page site presenting the animation & infographic proposal for Raumpark Vienna:
-a short intro, the storyboard (Package 1, 3 minutes, 10 shots) and the timetable.
+a short intro, the storyboard (Package 1, 3 minutes, 9 shots) and the timetable.
 Plain HTML, CSS and ES-module JavaScript, with no build step.
 
 Proposal by Manuel Gruber · _studiogruber
@@ -25,10 +25,10 @@ js/storyboard.js     storyboard player: big screen, clickable edit timeline, sho
 js/deckshape.js      merges the deck rectangles into one irregular outline (with openings)
 js/sun.js            solar position (NOAA), used for the sun arc, shadows and solar income
 js/config.js         site location and key dates for the sun calculations
-js/vienna.js         Vienna's outline and the Danube for S1 (© OpenStreetMap contributors, ODbL)
+js/vienna.js         Vienna's outline and the Danube for S1 (© OpenStreetMap contributors, ODbL) and its 23 districts (Stadt Wien – data.wien.gv.at, CC BY 4.0)
 js/gantt.js          timetable built from data/timeline.json
 js/hairline/         Hairline engine and line figure (not used by the storyboard at the moment, see below)
-data/storyboard.json shots S1–S10: duration, scale, idea, camera, graphics, data
+data/storyboard.json shots S1–S9: duration, scale, idea, camera, graphics, data
 data/timeline.json   18-week Gantt: two packages, holiday break, milestones
 ```
 
@@ -50,7 +50,7 @@ shots, space plays / pauses. The text under the timeline describes the shot on s
 Edit `data/storyboard.json`. Durations drive the timeline widths and timecodes; `scale` sets the
 zoom-level track (`city`, `district`, `street`, `room`; two values = split screen);
 `tier: "optional"` draws the shot hatched/dashed. Sketches are picked by the `sketch` key
-(`heatmap`, `district-border`, `raumpark-rise`, `district-heat`, `sun`, `wind`, `split`, `layers`, `sun-hours`,
+(`heatmap`, `district-border`, `raumpark-rise`, `district-heat`, `sun`, `split`, `layers`, `sun-hours`,
 `solar`) in `js/storyboard.js`. A shot with a `figure` key shows a Hairline figure from
 `js/hairline/` instead; its `sketch` key then only picks the strip thumbnail.
 

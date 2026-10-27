@@ -347,16 +347,17 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
 .sb-river { fill: none; stroke: var(--ink); stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; }
 .sb-canal { fill: none; stroke: var(--ink); stroke-width: 0.6; stroke-linecap: round; stroke-linejoin: round; }
 .sb-city { fill: none; stroke: var(--ink); stroke-width: 0.8; stroke-linejoin: round; }
+.sb-districts path { fill: none; stroke: var(--paper); stroke-width: 0.55; stroke-linejoin: round; opacity: 0.9; }
 .sb-scalebar path { fill: none; stroke: var(--ink); stroke-width: 0.8; }
 .sb-credit { font-size: 4.2px; fill: var(--ink-3); }
 .sb-north path { fill: none; stroke: var(--ink); stroke-width: 1.2; stroke-linecap: round; }
 .sb-north polygon, .sb-north circle { fill: none; stroke: var(--ink); stroke-width: 0.8; }
-/* heat maps (S1, S2): steel blue → cool grey → pale peach → orange → coral */
-.h1 { fill: #8aaacb; }
-.h2 { fill: #c2d0de; }
-.h3 { fill: #efdfcf; }
-.h4 { fill: #e7a37a; }
-.h5 { fill: #dc7e68; }
+/* heat (S1 and the district heat): one scale, cool blue → pale → deep red */
+.h1 { fill: #5c92cc; }
+.h2 { fill: #accae4; }
+.h3 { fill: #f0decc; }
+.h4 { fill: #e47a56; }
+.h5 { fill: #a02828; }
 .dh { stroke: var(--paper); stroke-width: 0.25; }
 .dh1 { fill: #4f86c6; } .dh2 { fill: #86acd9; } .dh3 { fill: #c3d5ea; } .dh4 { fill: #f4dcc2; }
 .dh5 { fill: #f5a46e; } .dh6 { fill: #ec7d45; } .dh7 { fill: #db5532; }
@@ -370,10 +371,13 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
 .hm-roof { fill: none; }
 /* S9: sun hours — the deck keeps a clear edge over the raster */
 .sh-deck-edge { fill: none; stroke: color-mix(in srgb, var(--park) 60%, var(--ink)); stroke-width: 0.7; stroke-linejoin: round; }
-.hm-pylon .f-s, .hm-pylon .f-t { fill: rgb(128, 22, 176); }
+.hm-pylon .f-s, .hm-pylon .f-t { fill: rgb(150, 186, 220); }
 .hm-pylon .k-sil, .hm-pylon .k-cr, .hm-deck .k-sil, .hm-deck .k-cr { stroke: color-mix(in srgb, var(--ink) 55%, transparent); stroke-width: 0.3; }
-.hm-deck .f-t { fill: rgb(255, 233, 44); }
-.hm-deck .f-s { fill: rgb(247, 130, 26); }
+.hm-deck .f-t { fill: rgb(196, 214, 232); }
+.hm-sol .f-t { fill: rgb(214, 100, 72); } .hm-sol .f-s { fill: rgb(234, 170, 140); }
+.hm-sol--green .f-t { fill: rgb(172, 202, 228); } .hm-sol--green .f-s { fill: rgb(150, 186, 220); }
+.hm-sol .k-sil, .hm-sol .k-cr { stroke: color-mix(in srgb, var(--ink) 55%, transparent); stroke-width: 0.3; }
+.hm-deck .f-s { fill: rgb(150, 186, 220); }
 /* S6: layers */
 .ly-drop { fill: none; stroke: var(--ink-3); stroke-width: 0.5; }
 /* S2: the surrounding buildings fade back after a moment (timed to the shot via --shot) */

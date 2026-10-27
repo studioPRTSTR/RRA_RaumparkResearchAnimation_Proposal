@@ -19,8 +19,8 @@
       ],
       "idea": "Open on the whole city seen from above. A heat map builds up district by district and shows where Vienna overheats in summer. The camera settles on the dense inner west around Westbahnhof, our case study.",
       "camera": "Top-down, slow push-in towards Westbahnhof",
-      "graphics": "Heat legend · district outlines",
-      "data": "Heat map: surface temperature or heat-vulnerability data (source to confirm)",
+      "graphics": "Heat scale cool blue → deep red (as in the district heat) · city outline and its 23 districts",
+      "data": "Heat map: surface temperature or heat-vulnerability data (source to confirm) · city and district boundaries (OpenStreetMap, ODbL; Stadt Wien, data.wien.gv.at, CC BY 4.0)",
       "transition": "Zoom in"
     },
     {
@@ -45,67 +45,18 @@
       "sketch": "raumpark-rise",
       "title": "Raumpark: a second city, one level up",
       "kicker": "Isometric · the city's volumes taken up one level",
-      "duration": 15,
-      "scale": [
-        "district"
-      ],
-      "idea": "City design is also climate design, and vice versa. RAUMPARK stands for a new typology of cities in the era of the New Climatic Regime: urban expansions and densifications in the form of populated green spaces and forests above, and interlinked with, the existing city. The shot shows it with the city's own material: some blocks of the existing city take the colours of the uses (culture, health & wellbeing, residential, green areas). The pylons rise from the street crossings with green climbing them, and the deck spreads out along the streets. Then the coloured blocks' volumes are duplicated, lift off and deform into the volumes on the deck, mostly running in one direction: what the city has, taken up one level and reshaped to fit.",
-      "camera": "Fixed isometric, the view of the following shots; the Raumpark grows out of the district",
-      "graphics": "Blocks in use colours · pylons with climbing green · deck · duplicated volumes morphing onto the deck",
-      "data": "Raumpark concept: pylon positions, deck outline, programme (from the research team)",
-      "transition": "Same camera, the sun"
-    },
-    {
-      "code": "S4",
-      "tier": "core",
-      "sketch": "sun",
-      "title": "Westbahnhof: sun & shade, summer and winter",
-      "kicker": "Isometric · district scale",
       "duration": 20,
       "scale": [
         "district"
       ],
-      "idea": "Same view, the Raumpark now in place above the district. Two days run as time-lapses: 21 June, with the sun high on a long arc and a short shadow under the deck, then 21 December, with the sun low on a short arc and the deck's shadow stretching far across streets and courtyards. Both day arcs stay visible, so the difference reads at once.",
-      "camera": "Fixed isometric · time-lapse 21 June, then 21 December",
-      "graphics": "Summer and winter sun arcs · deck shadow",
-      "data": "Sun position for Vienna on 21 June and 21 December (calculated) · 3D model of the area",
-      "transition": "Same camera, heat"
-    },
-    {
-      "code": "S5",
-      "tier": "core",
-      "sketch": "district-heat",
-      "title": "Westbahnhof: heat without / with Raumpark",
-      "kicker": "Isometric · district heat comparison",
-      "duration": 15,
-      "scale": [
-        "district"
-      ],
-      "idea": "Same view of the district, now as heat. First without the Raumpark: the paved streets and the station forecourt glow warm red, the courtyards are milder. Then the Raumpark fades in and the heat map shifts: under and around the deck the ground turns cooler blue. Same view, same scale, so the difference reads at a glance.",
-      "camera": "Fixed isometric; without → Raumpark fades in → with",
-      "graphics": "Blue → red heat map · semi-transparent deck",
-      "data": "Surface temperature or heat-stress simulation with and without the deck (to confirm)",
-      "transition": "Same camera, new layer"
-    },
-    {
-      "code": "S6",
-      "tier": "core",
-      "sketch": "wind",
-      "title": "Westbahnhof: wind",
-      "kicker": "Isometric · district & street",
-      "duration": 15,
-      "scale": [
-        "district",
-        "street"
-      ],
-      "idea": "Same camera, new layer: wind particles run through the streets and over the deck. Channelled jets and sheltered corners become visible, and the deck level turns out windier than the street.",
-      "camera": "Same isometric view, gentle push-in to street level",
-      "graphics": "Flow arrows · speed labels",
-      "data": "CFD results or schematic flow (to decide)",
+      "idea": "City design is also climate design, and vice versa. RAUMPARK stands for a new typology of cities in the era of the New Climatic Regime: urban expansions and densifications in the form of populated green spaces and forests above, and interlinked with, the existing city. The shot shows it with the city's own material: some blocks of the existing city take the colours of the uses (culture, health & wellbeing, residential, green areas). The pylons rise from the street crossings and the deck spreads out along the streets. Then the coloured blocks' volumes are duplicated, lift off and deform into the volumes on the deck, mostly running in one direction: what the city has, taken up one level and reshaped to fit.",
+      "camera": "Fixed isometric, the view of the following shots; the Raumpark grows out of the district",
+      "graphics": "Blocks in use colours · pylons · deck · duplicated volumes morphing onto the deck",
+      "data": "Raumpark concept: pylon positions, deck outline, programme (from the research team)",
       "transition": "Same camera, the model comes apart"
     },
     {
-      "code": "S7",
+      "code": "S4",
       "tier": "core",
       "sketch": "layers",
       "title": "Layers",
@@ -114,14 +65,46 @@
       "scale": [
         "district"
       ],
-      "idea": "After the district's sun, heat and wind, the same model comes apart into its layers: the existing city stays on the ground, then the pylons over the street crossings, the deck that branches along the streets and the use volumes on top lift away one after the other, thin lines marking where the pylons land. Then the stack closes again and the camera goes down to one window.",
+      "idea": "Straight after the Raumpark has grown, the same model comes apart into its layers: the existing city stays on the ground, then the pylons over the street crossings, the deck that branches along the streets and the use solids on top lift away one after the other, thin lines marking where the pylons land. Then the stack closes again, so the viewer knows what the Raumpark is made of before the studies of sun, heat and wind.",
       "camera": "Isometric, the stack opens at one layer after the other",
       "graphics": "Exploded layers · lines where the pylons land",
       "data": "3D model of the district, split into layers",
-      "transition": "Back together, push in on a window"
+      "transition": "Same camera, the sun"
     },
     {
-      "code": "S8",
+      "code": "S5",
+      "tier": "core",
+      "sketch": "sun",
+      "title": "Westbahnhof: sun & shade, summer and winter",
+      "kicker": "Isometric · district scale",
+      "duration": 20,
+      "scale": [
+        "district"
+      ],
+      "idea": "Same view, the Raumpark in place above the district. Two days run as time-lapses: 21 June, with the sun high on a long arc and a short shadow under the deck, then 21 December, with the sun low on a short arc and the deck's shadow stretching far across streets and courtyards. Both day arcs stay visible, so the difference reads at once.",
+      "camera": "Fixed isometric · time-lapse 21 June, then 21 December",
+      "graphics": "Summer and winter sun arcs · deck shadow",
+      "data": "Sun position for Vienna on 21 June and 21 December (calculated) · 3D model of the area",
+      "transition": "Same camera, heat"
+    },
+    {
+      "code": "S6",
+      "tier": "core",
+      "sketch": "district-heat",
+      "title": "Westbahnhof: heat without / with",
+      "kicker": "Isometric · surface heat on a summer day",
+      "duration": 20,
+      "scale": [
+        "district"
+      ],
+      "idea": "Same view on a summer day (21 June). First the district as it is today: asphalt streets and roofs heat up most, courtyards less, the parks stay cool. Then the Raumpark fades in and the colours shift where its deck shades the streets and courtyards below: they cool down. One scale from cool blue to deep red, the same as the heat map of Vienna in the first shot.",
+      "camera": "Fixed isometric; without → Raumpark fades in → with",
+      "graphics": "Heat scale cool blue → deep red (as in S1) · deck fading in · scale",
+      "data": "Surface temperature: simulation or measurement (source to confirm) · 3D model of the area",
+      "transition": "Push in to one window"
+    },
+    {
+      "code": "S7",
       "tier": "core",
       "sketch": "split",
       "title": "Window & model, side by side",
@@ -135,10 +118,10 @@
       "camera": "Overview → deck fades to transparent → push-in on one window → full-screen window view with a synced model inset",
       "graphics": "Transparent deck · window highlight · model inset · shared clock",
       "data": "Same sun data · one reference flat / window",
-      "transition": "Up onto the deck"
+      "transition": "Out of the window, the whole day of light"
     },
     {
-      "code": "S9",
+      "code": "S8",
       "tier": "core",
       "sketch": "sun-hours",
       "title": "Quality of sunlight",
@@ -147,25 +130,25 @@
       "scale": [
         "district"
       ],
-      "idea": "How much sun reaches the people who live here, below the Raumpark and on it. The whole of 20 March, the equinox and the usual day for daylight studies, merged into one picture: the streets, courtyards, roofs and the deck show how many hours of direct sun they get over the day, from sky blue (little) to light orange (sun all day). The shadows of the existing blocks, the deck and its volumes are all in it, so the shot shows where the new level keeps light for the city below and where it gains the best light on top. The day's sun arc runs above, with its times.",
+      "idea": "How much sun reaches the people who live here, below the Raumpark and on it. The whole of 20 March, the equinox and the usual day for daylight studies, merged into one picture: the streets, courtyards, roofs and the deck show how many hours of direct sun they get over the day, from sky blue (little) to light orange (sun all day). The shadows of the existing blocks, the deck and its volumes are all in it, so the shot shows where the new level keeps light for the city below and where it gains the best light on top.",
       "camera": "Same isometric view, still; the camera drifts in slowly",
-      "graphics": "Sun hours on ground, roofs and deck · the day's sun arc with times · scale",
+      "graphics": "Sun hours on ground, roofs and deck · scale",
       "data": "Sun position for Vienna on 20 March (calculated) · 3D model of the area and the Raumpark",
       "transition": "Same camera, from light to energy"
     },
     {
-      "code": "S10",
+      "code": "S9",
       "tier": "core",
       "sketch": "solar",
       "title": "Greenery & solar income",
       "kicker": "Diagram · heat map on the deck",
-      "duration": 15,
+      "duration": 20,
       "scale": [
         "district"
       ],
       "idea": "A diagram over the whole deck: a heat map of how much sun each part receives over the year, with the use volumes casting their shade. From it follows where planting thrives, where shade-loving planting belongs, and where PV pays off, with the share of each shown as bars.",
       "camera": "Top-down / isometric diagram, heat map sweeps in",
-      "graphics": "Solar heat map · legend · share bars · PV · PV on the sloped, sun-facing sides of the volumes",
+      "graphics": "Yearly sun on the deck in gold · PV on the sloped, sun-facing sides of the volumes · scale",
       "data": "Yearly sun on the deck (calculated) · planting and PV assumptions"
     }
   ]

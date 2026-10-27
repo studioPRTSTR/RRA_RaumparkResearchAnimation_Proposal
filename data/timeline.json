@@ -3,7 +3,7 @@
   "weeks": 18,
   "phases": [
     {
-      "label": "Package 1 · 3-min film S1–S10",
+      "label": "Package 1 · 3-min film S1–S9",
       "start": "2026-10-28",
       "end": "2027-01-15"
     },
@@ -66,43 +66,37 @@
           "tone": "park"
         },
         {
-          "label": "S4 Westbahnhof sun & shade (summer / winter)",
-          "start": "2026-11-16",
-          "end": "2026-12-11",
-          "tone": "sun"
-        },
-        {
-          "label": "S5 Westbahnhof heat: without / with",
-          "start": "2026-11-16",
-          "end": "2026-12-04",
-          "tone": "heat"
-        },
-        {
-          "label": "S6 Westbahnhof wind",
-          "start": "2026-11-23",
-          "end": "2026-12-18",
-          "tone": "wind"
-        },
-        {
-          "label": "S7 Layers: what the Raumpark is made of",
+          "label": "S4 Layers: what the Raumpark is made of",
           "start": "2026-12-14",
           "end": "2026-12-18",
           "tone": "park"
         },
         {
-          "label": "S8 Window & model split screen",
+          "label": "S5 Westbahnhof sun & shade (summer / winter)",
+          "start": "2026-11-16",
+          "end": "2026-12-11",
+          "tone": "sun"
+        },
+        {
+          "label": "S6 Westbahnhof heat: without / with",
+          "start": "2026-11-16",
+          "end": "2026-12-04",
+          "tone": "heat"
+        },
+        {
+          "label": "S7 Window & model split screen",
           "start": "2026-11-30",
           "end": "2027-01-08",
           "tone": "sun"
         },
         {
-          "label": "S9 Quality of sunlight",
+          "label": "S8 Quality of sunlight",
           "start": "2026-12-07",
           "end": "2027-01-08",
           "tone": "sun"
         },
         {
-          "label": "S10 Greenery & solar income",
+          "label": "S9 Greenery & solar income",
           "start": "2026-11-30",
           "end": "2026-12-18",
           "tone": "sun"
