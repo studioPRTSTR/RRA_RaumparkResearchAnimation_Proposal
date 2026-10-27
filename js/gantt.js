@@ -47,7 +47,9 @@ export function renderGantt(el, data) {
   const days = data.weeks * 7;
   const end = start + days * DAY;
   const pct = (t) => ((t - start) / DAY / days) * 100;
-  const breaks = (data.breaks ?? []).map((b) => [parse(b.start), parse(b.end) + DAY, b.label]);
+  // breaks cut the bars; a break with `work: true` (holidays worked through) is only shown
+  const bands = (data.breaks ?? []).map((b) => [parse(b.start), parse(b.end) + DAY, b.label, !!b.work]);
+  const breaks = bands.filter((b) => !b[3]);
   // working days (Mon–Fri) outside the breaks, as weeks of five days
   const weekdays = (x, y) => { let n = 0; for (let t = x; t < y; t += DAY) { const d = new Date(t).getUTCDay(); if (d > 0 && d < 6) n++; } return n; };
   const workingWeeks = (a, b) => Math.round(subtract(a, b, breaks).reduce((n, [x, y]) => n + weekdays(x, y), 0) / 5 * 10) / 10;
@@ -74,8 +76,8 @@ export function renderGantt(el, data) {
   }
 
   /* ---- overlay: breaks, milestone lines, today ---- */
-  let overlay = breaks.map(([s, e, label]) =>
-    `<div class="gantt__break" style="left:${pct(s)}%;width:${pct(e) - pct(s)}%"><span>${esc(label)}</span></div>`).join('');
+  let overlay = bands.map(([s, e, label, work]) =>
+    `<div class="gantt__break${work ? ' gantt__break--work' : ''}" style="left:${pct(s)}%;width:${pct(e) - pct(s)}%"><span>${esc(label)}</span></div>`).join('');
   overlay += phases.slice(1).map((p) => `<div class="gantt__phase-edge" style="left:${pct(p.a)}%"></div>`).join('');
   const ms = (data.milestones ?? []).map((m, i) => ({ ...m, n: i + 1, t: parse(m.date) }));
   overlay += ms.map((m) => `<div class="gantt__mline" style="left:${pct(m.t + DAY / 2)}%"></div>`).join('');
@@ -128,7 +130,8 @@ export function renderGantt(el, data) {
     <div class="gantt__legend" aria-label="Legend">
       ${(data.legend ?? []).map((l) => `<span><i class="sw tone-${esc(l.tone)}"></i>${esc(l.label)}</span>`).join('')}
       <span><i class="sw is-optional"></i>Optional / to be defined</span>
-      <span><i class="sw sw--break"></i>Holiday break</span>
+      ${breaks.length ? '<span><i class="sw sw--break"></i>Holiday break</span>' : ''}
+      ${bands.some((b) => b[3]) ? '<span><i class="sw sw--work"></i>Holidays · final render</span>' : ''}
       <span><i class="sw sw--ms"></i>Milestone</span>
     </div>
     <ol class="gantt__milestones">

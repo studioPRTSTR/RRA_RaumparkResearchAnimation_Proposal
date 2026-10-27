@@ -605,6 +605,10 @@ html.sb-fs-lock { overflow: hidden; }
   border-left: var(--hair) solid var(--rule-strong); border-right: var(--hair) solid var(--rule-strong);
 }
 .gantt__break span { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(180deg); writing-mode: vertical-rl; white-space: nowrap; font: 500 10px var(--font-mono); text-transform: uppercase; color: var(--ink-2); background: var(--paper); padding: 6px 2px; }
+/* holidays that are worked through (the final render): a light tint over the bars, label on top */
+.gantt__break--work { background: color-mix(in srgb, var(--sun) 10%, transparent); border-color: color-mix(in srgb, var(--sun) 45%, transparent); }
+.gantt__break--work span { top: 4px; transform: translateX(-50%); writing-mode: horizontal-tb; background: none; padding: 0; color: var(--sun); font-size: 9px; }
+.gantt__legend .sw--work { background: color-mix(in srgb, var(--sun) 18%, transparent); border: 1px solid color-mix(in srgb, var(--sun) 45%, transparent); border-radius: 0; }
 .gantt__mline { position: absolute; top: 0; bottom: 0; width: 0; border-left: var(--hair) dashed var(--ink-2); }
 .gantt__today { position: absolute; top: 0; bottom: 0; border-left: 2px solid var(--wind); }
 .gantt__today span { position: absolute; top: 2px; left: 4px; font: 10px var(--font-mono); color: var(--wind); text-transform: uppercase; }

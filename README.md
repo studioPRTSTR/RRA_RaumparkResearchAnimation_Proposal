@@ -29,7 +29,7 @@ js/vienna.js         Vienna's outline and the Danube for S1 (© OpenStreetMap co
 js/gantt.js          timetable built from data/timeline.json
 js/hairline/         Hairline engine and line figure (not used by the storyboard at the moment, see below)
 data/storyboard.json shots S1–S10: duration, scale, idea, camera, graphics, data
-data/timeline.json   18-week Gantt: two packages, holiday break, milestones
+data/timeline.json   18-week Gantt: pre-production, two packages, final render over the holidays, milestones
 ```
 
 ## Editing the storyboard
@@ -78,4 +78,4 @@ Rectangles that only touch at a corner give an odd outline, so let pieces overla
 ## Editing the timetable
 
 Edit `data/timeline.json`: `phases` (the two packages), `groups` → `tasks` (start/end dates,
-`tone` for the colour, `optional` / `tag` for hatched bars), `breaks` and `milestones`.
+`tone` for the colour, `optional` / `tag` for hatched bars), `breaks` (with `work: true` a period that is worked through, shown but not cut out) and `milestones`.

@@ -3,42 +3,66 @@
   "weeks": 18,
   "phases": [
     {
-      "label": "Package 1 · 3-min film S1–S10",
+      "label": "Pre-production",
       "start": "2026-10-28",
-      "end": "2027-01-15"
+      "end": "2026-11-13"
+    },
+    {
+      "label": "Package 1 · film S1–S10",
+      "start": "2026-11-16",
+      "end": "2027-01-08"
     },
     {
       "label": "Package 2 · to be defined",
-      "start": "2027-01-18",
+      "start": "2027-01-11",
       "end": "2027-02-26"
     }
   ],
   "breaks": [
     {
-      "label": "Holiday break",
+      "label": "Holidays",
       "start": "2026-12-21",
-      "end": "2027-01-03"
+      "end": "2027-01-03",
+      "work": true
     }
   ],
   "groups": [
     {
-      "label": "Package 1 · Set-up",
+      "label": "Package 1 · Pre-production",
       "tasks": [
         {
           "label": "Kick-off & brief",
           "start": "2026-10-28",
-          "end": "2026-11-06",
+          "end": "2026-10-30",
           "tone": "neutral"
         },
         {
-          "label": "Data & 3D model Westbahnhof",
+          "label": "Vienna: city outline, districts & heat data",
           "start": "2026-11-02",
-          "end": "2026-11-20",
+          "end": "2026-11-06",
+          "tone": "heat"
+        },
+        {
+          "label": "3D model: Westbahnhof area & Raumpark",
+          "start": "2026-11-02",
+          "end": "2026-11-13",
           "tone": "neutral"
+        },
+        {
+          "label": "Sun & climate data (sun paths, heat, wind)",
+          "start": "2026-11-02",
+          "end": "2026-11-13",
+          "tone": "sun"
         },
         {
           "label": "Storyboard & styleframes",
           "start": "2026-11-02",
+          "end": "2026-11-13",
+          "tone": "neutral"
+        },
+        {
+          "label": "Render set-up & look development",
+          "start": "2026-11-09",
           "end": "2026-11-13",
           "tone": "neutral"
         }
@@ -67,8 +91,8 @@
         },
         {
           "label": "S4 Layers: what the Raumpark is made of",
-          "start": "2026-11-30",
-          "end": "2026-12-04",
+          "start": "2026-11-23",
+          "end": "2026-11-27",
           "tone": "park"
         },
         {
@@ -79,8 +103,8 @@
         },
         {
           "label": "S6 Westbahnhof sun & shade (summer / winter)",
-          "start": "2026-12-07",
-          "end": "2026-12-11",
+          "start": "2026-11-30",
+          "end": "2026-12-04",
           "tone": "sun"
         },
         {
@@ -91,8 +115,8 @@
         },
         {
           "label": "S8 Window & model split screen",
-          "start": "2026-12-14",
-          "end": "2026-12-18",
+          "start": "2026-12-07",
+          "end": "2026-12-11",
           "tone": "sun"
         },
         {
@@ -103,14 +127,31 @@
         },
         {
           "label": "S10 Greenery & solar income",
-          "start": "2027-01-04",
-          "end": "2027-01-08",
+          "start": "2026-12-14",
+          "end": "2026-12-18",
           "tone": "sun"
+        }
+      ]
+    },
+    {
+      "label": "Package 1 · Final render (holidays)",
+      "tasks": [
+        {
+          "label": "Final render of all shots",
+          "start": "2026-12-21",
+          "end": "2027-01-01",
+          "tone": "neutral"
         },
         {
-          "label": "Render, edit & review copy",
+          "label": "Edit, sound & grade",
+          "start": "2026-12-28",
+          "end": "2027-01-01",
+          "tone": "neutral"
+        },
+        {
+          "label": "Review copy & corrections",
           "start": "2027-01-04",
-          "end": "2027-01-14",
+          "end": "2027-01-08",
           "tone": "neutral"
         }
       ]
@@ -120,13 +161,13 @@
       "tasks": [
         {
           "label": "Proposal for further animations",
-          "start": "2027-01-18",
-          "end": "2027-01-22",
+          "start": "2027-01-11",
+          "end": "2027-01-15",
           "tone": "neutral"
         },
         {
           "label": "Package 2 animations",
-          "start": "2027-01-25",
+          "start": "2027-01-18",
           "end": "2027-02-19",
           "tone": "neutral",
           "optional": true,
@@ -147,20 +188,24 @@
       "date": "2026-10-28"
     },
     {
-      "label": "Storyboard & styleframes approved",
+      "label": "Pre-production done: model, data, storyboard & look approved",
       "date": "2026-11-13"
     },
     {
-      "label": "Animatic review (full 3 min)",
-      "date": "2026-12-04"
+      "label": "All shots animated · animatic review (full 3 min)",
+      "date": "2026-12-18"
+    },
+    {
+      "label": "Package 1 film rendered",
+      "date": "2027-01-01"
     },
     {
       "label": "Package 1 review",
-      "date": "2027-01-15"
+      "date": "2027-01-08"
     },
     {
       "label": "Package 2 scope agreed",
-      "date": "2027-01-22"
+      "date": "2027-01-15"
     },
     {
       "label": "Final delivery",
