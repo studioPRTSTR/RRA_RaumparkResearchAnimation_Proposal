@@ -334,9 +334,10 @@ function sunLayer(P, dur, idp, dateId = 'jun', hours = true) {
 }
 
 /* -------------------------------------------------------------------------
-   Uses on the deck: every use is ONE solid, a capped pyramid on a polygonal
-   base (world metres on the deck top) that follows the deck's own form, 4 m in
-   from its edges, and the four embrace each other: culture (west) and health
+   Uses on the deck: every use is a base level on a polygonal footprint (world
+   metres on the deck top) that follows the deck's own form, 4 m in from its
+   edges, with a few smaller boxes stacked on it, some reaching out past the
+   level below (cantilevers). The four embrace each other: culture (west) and health
    (east) each take one end of the southern band and climb its side connector
    up to the housing; the green takes the middle of the band and runs up the
    middle connector into a notch of the housing, which fills the northern
@@ -390,39 +391,67 @@ function frustum(P, base, top, z0, z1) {
   const front = order.filter((i) => Math.sign(area(sides[i])) === up);
   return { sides: sides.map((q) => dPath(q)), top: dPath(T), order, front };
 }
-/** One use volume (a capped pyramid on its polygon), styled by cls like a box. */
+/** One use volume (a box on its polygon), styled by cls like a box, with its storeys as lines on
+    the walls facing the camera (every FLOOR metres). */
+const FLOOR = 3;
 function useVolume(P, b, cls, dz = 0) {
   const F = frustum(P, b.poly, b.top, b.z0 + dz, b.z1 + dz);
-  return `<g class="${cls}">${F.order.map((i) => `<path class="f-s ${F.front.includes(i) ? 'k-sil' : 'k-cr'}" d="${F.sides[i]}"/>`).join('')}<path class="f-t k-sil" d="${F.top}"/></g>`;
+  let floors = '';
+  if (b.top === b.poly) {
+    for (const i of F.front) {
+      const [ax, ay] = b.poly[i], [bx, by] = b.poly[(i + 1) % b.poly.length];
+      for (let z = b.z0 + FLOOR; z < b.z1 - 0.5; z += FLOOR) {
+        const [p, q] = [P(ax, ay, z + dz), P(bx, by, z + dz)];
+        floors += `M${f(p[0])} ${f(p[1])}L${f(q[0])} ${f(q[1])}`;
+      }
+    }
+  }
+  return `<g class="${cls}">${F.order.map((i) => `<path class="f-s ${F.front.includes(i) ? 'k-sil' : 'k-cr'}" d="${F.sides[i]}"/>`).join('')}${floors ? `<path class="k-fl" d="${floors}"/>` : ''}<path class="f-t k-sil" d="${F.top}"/></g>`;
 }
 
 const USES = (() => {
   const z = DISTRICT.deck.z1;
   const defs = {
-    // poly: the base, counter-clockwise; h: height; slope: how far the sides step in per metre of height
+    // poly: the base level, counter-clockwise, h its height; up: the levels stacked on it, each a box
+    // [x0, y0, x1, y1, height], resting on the level below; some reach out past it (cantilevers).
+    // Heights are whole storeys of FLOOR (3 m).
     culture: { n: 1, label: 'CULTURE', tags: 'PAVILIONS · EVENT SPACE',          // west end of the southern band + west connector
-      poly: [[44, 62], [52, 54], [132, 54], [132, 90], [78, 90], [78, 132], [62, 132], [62, 90], [52, 90], [44, 82]], h: 7, slope: 0.5 },
+      poly: [[44, 62], [52, 54], [132, 54], [132, 90], [78, 90], [78, 132], [62, 132], [62, 90], [52, 90], [44, 82]], h: 6,
+      up: [[58, 47, 106, 80, 6]] },                                                // reaches out over the street to the south
     health: { n: 2, label: 'HEALTH & WELLBEING', tags: 'SPORT · POOL · WELLBEING',  // east end + east connector
-      poly: [[170, 54], [244, 54], [252, 62], [252, 82], [244, 90], [238, 90], [238, 132], [222, 132], [222, 90], [170, 90]], h: 6, slope: 0.5 },
+      poly: [[170, 54], [244, 54], [252, 62], [252, 82], [244, 90], [238, 90], [238, 132], [222, 132], [222, 90], [170, 90]], h: 6,
+      up: [[198, 60, 248, 84, 6], [220, 98, 247, 124, 6]] },                       // the second one hangs out to the east
     green: { n: 4, label: 'GREEN AREAS', tags: 'PLANTED AREAS · SHADE',          // middle of the band, up the middle connector
-      poly: [[132, 54], [170, 54], [170, 90], [158, 90], [158, 146], [142, 146], [142, 90], [132, 90]], h: 3, slope: 0.5 },
+      poly: [[132, 54], [170, 54], [170, 90], [158, 90], [158, 146], [142, 146], [142, 90], [132, 90]], h: 6, up: [] },
     res: { n: 3, label: 'RESIDENTIAL', tags: 'HOUSING VOLUMES',                  // the northern band, round the green's head
-      poly: [[52, 140], [60, 132], [138, 132], [138, 150], [162, 150], [162, 132], [250, 132], [258, 140], [258, 160], [250, 168], [60, 168], [52, 160]], h: 14, slope: 0.2 },
+      poly: [[52, 140], [60, 132], [138, 132], [138, 150], [162, 150], [162, 132], [250, 132], [258, 140], [258, 160], [250, 168], [60, 168], [52, 160]], h: 9,
+      up: [[64, 136, 130, 164, 6], [170, 136, 246, 164, 6], [84, 127, 122, 158, 6], [196, 142, 252, 173, 6]] },
+  };
+  const bbox = (poly) => {
+    const xs = poly.map((q) => q[0]), ys = poly.map((q) => q[1]);
+    return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
   };
   for (const [k, u] of Object.entries(defs)) {
-    const xs = u.poly.map((q) => q[0]), ys = u.poly.map((q) => q[1]);
-    u.items = [{ x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys),
-      z0: z, z1: z + u.h, use: k, poly: u.poly, top: inset(u.poly, u.h * u.slope) }];
+    u.items = [{ ...bbox(u.poly), z0: z, z1: z + u.h, use: k, poly: u.poly, top: u.poly }];
+    // each upper box sits on the highest box it overlaps (on the base if none)
+    for (const [x0, y0, x1, y1, h] of u.up) {
+      const under = u.items.slice(1).filter((b) => x0 < b.x1 && x1 > b.x0 && y0 < b.y1 && y1 > b.y0);
+      const z0 = Math.max(z + u.h, ...under.map((b) => b.z1));
+      const poly = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
+      u.items.push({ x0, y0, x1, y1, z0, z1: z0 + h, use: k, poly, top: poly });
+    }
   }
   return defs;
 })();
 const ALL_USE_BOXES = Object.values(USES).flatMap((u) => u.items);
 const USE_ORDER = ['culture', 'health', 'res', 'green'];
 const byDepth = (a, b) => (b.x0 + b.x1 + b.y0 + b.y1) - (a.x0 + a.x1 + a.y0 + a.y1);
+/** Use volumes in drawing order: level by level, far → near within a level. */
+const byStack = (a, b) => a.z0 - b.z0 || byDepth(a, b);
 
 /** All use boxes; `focus` (a use key, 'all' or null) decides which ones get colour. */
 function useBoxes(P, focus, dz = 0) {
-  return ALL_USE_BOXES.slice().sort(byDepth).map((b, i) => {
+  return ALL_USE_BOXES.slice().sort(byStack).map((b, i) => {
     const lit = focus === 'all' || b.use === focus;
     const svg = useVolume(P, b, `use-box use-${b.use} ${lit ? 'is-focus' : 'is-muted'}`, dz);
     return lit && focus !== 'all' ? `<g class="use-fade" style="--d:${(i % 6) * 0.2}s">${svg}</g>` : svg;
@@ -468,7 +497,7 @@ function usesShot(id, shot = 55) {
     return `<animate attributeName="opacity" dur="${shot}s" fill="freeze" values="0;0;1;1" keyTimes="0;${f2(a)};${f2(a + FADE)};1"/>`;
   };
   // each volume: its transparent outline, and over it the coloured version that fades in when reached
-  const boxes = ALL_USE_BOXES.slice().sort(byDepth).map((b) =>
+  const boxes = ALL_USE_BOXES.slice().sort(byStack).map((b) =>
     useVolume(P, b, `use-box use-${b.use} is-muted`)
     + `<g opacity="0">${appear(b)}${useVolume(P, b, `use-box use-${b.use} is-focus`)}</g>`).join('');
   // stair cores at every pylon: a switchback from street to deck, the two used ones stronger
@@ -961,6 +990,13 @@ const SKETCHES = {
     const vis = (a, b) => `<animate attributeName="opacity" ${dur} values="0;0;1;1;0;0" keyTimes="0;${f2(a)};${f2(a + 0.005)};${f2(b)};${f2(b + 0.005)};1"/>`;
     const dupesBelow = moves.map((m) => dupe(m, vis(m.a, m.a + 0.07))).join('');
     const dupesAbove = moves.map((m) => dupe(m, fade(m.a + 0.07, m.a + 0.075))).join('');
+    // once a use's base has formed it takes on its storeys, and its upper levels drop onto it one
+    // after the other
+    const levels = moves.flatMap((m) => USES[m.u.use].items.map((b, k) => ({ b, k, a: m.a + 0.2 + Math.max(0, k - 1) * 0.025 })))
+      .sort((p, q) => byStack(p.b, q.b))
+      .map(({ b, k, a }) => `<g opacity="0">${fade(a, a + 0.02)}<g>${k ? `<animateTransform attributeName="transform" type="translate" ${dur} calcMode="spline"
+        values="0 ${f(-5 * sc)};0 ${f(-5 * sc)};0 0;0 0" keyTimes="0;${f2(a)};${f2(a + 0.03)};1" keySplines="0 0 1 1;.3 0 .2 1;0 0 1 1"/>` : ''}
+        ${useVolume(P, b, `use-box use-${b.use} is-focus`)}</g></g>`).join('');
 
     return `
       <rect class="sb-bg" width="320" height="180"/>
@@ -968,7 +1004,7 @@ const SKETCHES = {
       ${drawCity(P)}
       ${tinted}${dupesBelow}${pylons}
       ${deckParts}${deck}
-      ${dupesAbove}`;
+      ${dupesAbove}${levels}`;
   },
 
   /* S6 — the district's heat on a summer day without the Raumpark, then with it: ground, roofs and
@@ -1006,7 +1042,7 @@ const SKETCHES = {
         <g clip-path="url(#${id}-deck)"><image href="${S.deckUrl}" width="${HM.W}" height="${HM.H}" preserveAspectRatio="none"
           transform="translate(0 ${f(-D.deck.z1 * sc)}) ${matrix}"/></g>
         <path class="hm-edge hm-roof" fill-rule="evenodd" d="${loopsPath(P, D.deck.loops, D.deck.z1)}"/>
-        ${ALL_USE_BOXES.slice().sort(byDepth).map((b) => useVolume(P, b, `hm-sol${b.use === 'green' ? ' hm-sol--green' : ''}`)).join('')}` : ''}`;
+        ${ALL_USE_BOXES.slice().sort(byStack).map((b) => useVolume(P, b, `hm-sol${b.use === 'green' ? ' hm-sol--green' : ''}`)).join('')}` : ''}`;
     };
     return `
       <rect class="sb-bg" width="320" height="180"/>
@@ -1245,7 +1281,7 @@ const SKETCHES = {
           <g clip-path="url(#${id}-r${pc.i})"><use href="#${id}-low" transform="translate(0 ${f(-pc.z1 * sc)})"/></g>
           <path class="hm-edge hm-roof" fill-rule="evenodd" d="${roof}"/>`;
       }).join('');
-    const solids = ALL_USE_BOXES.slice().sort(byDepth).map((b) => useVolume(P, b, `use-box use-${b.use} is-focus`)).join('');
+    const solids = ALL_USE_BOXES.slice().sort(byStack).map((b) => useVolume(P, b, `use-box use-${b.use} is-focus`)).join('');
 
     // ---- wind, from W0 of the shot on: streamlines in 3 m steps, west → east
     const W0 = 0.4, W1 = 0.46, step = 3;
@@ -1277,7 +1313,7 @@ const SKETCHES = {
     };
     const onPlate = (x, y) => insideRects(D.plate.rects, x, y);
     const pylonAt = (x, y) => (D.pylons.some((p) => x >= p.x0 - 2 && x <= p.x1 && Math.abs(y - (p.y0 + p.y1) / 2) < 6) ? 1 : 0);
-    const solidAt = (x, y) => Math.max(0, ...ALL_USE_BOXES.map((u) => (inPoly(u.poly, x, y) ? u.z1 - u.z0 + 3 : 0)));
+    const solidAt = (x, y) => Math.max(0, ...ALL_USE_BOXES.map((u) => (inPoly(u.poly, x, y) ? u.z1 - dk.z1 + 3 : 0)));
     const ground = [70, 150].flatMap((sy) => [-5, 0, 5].map((o) => sy + o)).concat([D.plate.y0 + 4, D.plate.y1 - 4])
       .map((y, i) => stream(y, 1.5, D.plate.x0, D.plate.x1, pylonAt, onPlate, i * 1.7)).join('');
     let deckLines = '';
@@ -1294,7 +1330,7 @@ const SKETCHES = {
       }
       return d;
     };
-    const lee = ALL_USE_BOXES.flatMap((u, i) => {
+    const lee = ALL_USE_BOXES.filter((u) => u.z0 === dk.z1).flatMap((u, i) => {
       const xm = Math.max(...u.poly.map((q) => q[0]));
       const ys = u.poly.filter((q) => q[0] >= xm - 8).map((q) => q[1]);
       const ym = (Math.min(...ys) + Math.max(...ys)) / 2;
@@ -1303,7 +1339,7 @@ const SKETCHES = {
     // the wind is shown on its own: the sun picture gives way to the plain grey model, and the
     // streamlines stand still on it
     const plain = `${groundSvg(P)}${drawCity(P, D.pylons)}${deckSlab(P)}
-      ${ALL_USE_BOXES.slice().sort(byDepth).map((b) => useVolume(P, b, 'use-box sb-pav')).join('')}`;
+      ${ALL_USE_BOXES.slice().sort(byStack).map((b) => useVolume(P, b, 'use-box sb-pav')).join('')}`;
     const wind = `
       <g class="sh-wind" opacity="0"><animate attributeName="opacity" dur="${shot}s" fill="freeze" values="0;0;1;1" keyTimes="0;${W0};${W1};1"/>
         <rect class="sb-bg" width="320" height="180"/>
@@ -1324,18 +1360,20 @@ const SKETCHES = {
       ${wind}`;
   },
 
-  /* S10 — green space and housing, in figures. The model stays grey; one quantity at a time is in
-     colour, with a placeholder for its figure top right: the green space of today's city (parks),
-     then the Raumpark's green added on top (planted deck and green volume), then the residential
-     floors of the city and the Raumpark's housing (CSS .gl-* on --shot). */
-  'green-living'(id, shot = 15) {
-    const sc = 0.36, P = isoP(146, 142, sc), D = DISTRICT;
-    // the city with its storeys: a line every 3.5 m on the outer walls, shown with the housing
-    const area = (l) => Math.abs(l.reduce((s, [x, y], i) => { const [u, v] = l[(i + 1) % l.length]; return s + x * v - u * y; }, 0));
+  /* S10 — green space, housing and density, in figures. The model stays grey; one quantity at a
+     time is in colour, with a placeholder for its figure top right: the green space of today's city
+     (parks), then the Raumpark's green added on top (planted deck and green volume), then the
+     residential floors of the city and the Raumpark's housing. Last the density: the city turns
+     neutral, the whole Raumpark in one accent, and a graph bottom right shows the floor area today
+     and with the Raumpark, the increase computed from the model (CSS .gl-* on --shot). */
+  'green-living'(id, shot = 20) {
+    const sc = 0.36, P = isoP(146, 142, sc), D = DISTRICT, CITY_FLOOR = 3.5;
+    const area = (l) => Math.abs(l.reduce((s, [x, y], i) => { const [u, v] = l[(i + 1) % l.length]; return s + x * v - u * y; }, 0)) / 2;
     const outer = (b) => b.loops.reduce((m, l) => (area(l) > area(m) ? l : m));
+    // the city with its storeys: a line every 3.5 m on the outer walls, shown with the housing
     const floors = (b) => frontFaces([outer(b)], 0, b.z1).map((fc) => {
       let d = '';
-      for (let z = 3.5; z < b.z1 - 1; z += 3.5) {
+      for (let z = CITY_FLOOR; z < b.z1 - 1; z += CITY_FLOOR) {
         const [ax, ay] = P(...fc.a, z), [bx, by] = P(...fc.b, z);
         d += `M${f(ax)} ${f(ay)}L${f(bx)} ${f(by)}`;
       }
@@ -1343,19 +1381,44 @@ const SKETCHES = {
     }).join('');
     const city = [...D.blocks, D.hall, ...D.pylons]
       .sort((a, b) => (b.x0 + b.x1 + b.y0 + b.y1) - (a.x0 + a.x1 + a.y0 + a.y1))
-      .map((b) => (b.block ? `${prism(P, b.loops, 0, b.z1, 'sb-block gl-res')}<path class="gl-floors" d="${floors(b)}"/>` : drawPiece(P, b)))
+      .map((b) => (b.block ? `${prism(P, b.loops, 0, b.z1, 'sb-block gl-cres')}<path class="gl-floors" d="${floors(b)}"/>` : drawPiece(P, b)))
       .join('');
-    const solids = ALL_USE_BOXES.slice().sort(byDepth)
-      .map((b) => useVolume(P, b, `use-box gl-sol${b.use === 'green' ? ' gl-green' : b.use === 'res' ? ' gl-res' : ''}`)).join('');
-    // figures, top right: per quantity a label placeholder and a bar that grows when it is shown
+    const rpCls = { green: 'gl-rgreen', res: 'gl-rres', culture: 'gl-rother', health: 'gl-rother' };
+    const solids = ALL_USE_BOXES.slice().sort(byStack).map((b) => useVolume(P, b, `use-box gl-sol ${rpCls[b.use]}`)).join('');
+
+    // density: gross floor area = footprint × storeys, of the city's blocks (courtyards left out)
+    // and of the Raumpark's boxes
+    const gfaCity = D.blocks.reduce((s, b) => {
+      const o = outer(b), holes = b.loops.filter((l) => l !== o).reduce((h, l) => h + area(l), 0);
+      return s + (area(o) - holes) * Math.round(b.z1 / CITY_FLOOR);
+    }, 0);
+    const gfaRp = ALL_USE_BOXES.reduce((s, b) => s + area(b.poly) * Math.round((b.z1 - b.z0) / FLOOR), 0);
+    const plus = Math.round((gfaRp / gfaCity) * 100);
+
     const dur = `dur="${shot}s" fill="freeze"`;
+    const show = (a) => `<animate attributeName="opacity" ${dur} values="0;0;1;1" keyTimes="0;${f2(a)};${f2(a + 0.03)};1"/>`;
+    // figures, top right: per quantity a label placeholder and a bar that grows when it is shown
     const row = (k, a, w, cls) => {
       const y = 22 + k * 15;
-      return `<g opacity="0"><animate attributeName="opacity" ${dur} values="0;0;1;1" keyTimes="0;${f2(a)};${f2(a + 0.03)};1"/>
+      return `<g opacity="0">${show(a)}
         <rect class="db-ph__line" x="236" y="${y}" width="${k === 1 ? 22 : 30}" height="1.6"/>
         <rect class="gl-bar ${cls}" x="236" y="${y + 4.5}" width="0" height="3">
-          <animate attributeName="width" ${dur} values="0;0;${w};${w}" keyTimes="0;${f2(a)};${f2(a + 0.08)};1"/></rect></g>`;
+          <animate attributeName="width" ${dur} values="0;0;${w};${w}" keyTimes="0;${f2(a)};${f2(a + 0.06)};1"/></rect></g>`;
     };
+    // the density graph, bottom right: floor area today, and with the Raumpark on top of it
+    const D0 = 0.72, base = 164, H = 44, bw = 13, xa = 258, xb = 282;
+    const ht = (H * gfaCity) / (gfaCity + gfaRp), hr = H - ht;
+    const grow = (y0, h, a, b) => `<animate attributeName="height" ${dur} values="0;0;${f(h)};${f(h)}" keyTimes="0;${f2(a)};${f2(b)};1"/>
+      <animate attributeName="y" ${dur} values="${f(y0)};${f(y0)};${f(y0 - h)};${f(y0 - h)}" keyTimes="0;${f2(a)};${f2(b)};1"/>`;
+    const graph = `<g opacity="0">${show(D0)}
+      <path class="gl-axis" d="M${xa - 5} ${base}H${xb + bw + 5}"/>
+      <rect class="gl-col" x="${xa}" y="${base}" width="${bw}" height="0">${grow(base, ht, D0, D0 + 0.05)}</rect>
+      <rect class="gl-col" x="${xb}" y="${base}" width="${bw}" height="0">${grow(base, ht, D0, D0 + 0.05)}</rect>
+      <rect class="gl-col gl-col--add" x="${xb}" y="${f(base - ht)}" width="${bw}" height="0">${grow(base - ht, hr, D0 + 0.06, D0 + 0.12)}</rect>
+      <rect class="db-ph__line" x="${xa + 1}" y="${base + 3}" width="${bw - 2}" height="1.4"/>
+      <rect class="db-ph__line" x="${xb + 1}" y="${base + 3}" width="${bw - 2}" height="1.4"/>
+      <text class="gl-pct" x="${f(xb + bw / 2)}" y="${f(base - H - 3)}" opacity="0">${show(D0 + 0.13)}+${plus} %</text>
+    </g>`;
     return `
       <rect class="sb-bg" width="320" height="180"/>
       ${groundSvg(P, { context: false })}
@@ -1363,7 +1426,8 @@ const SKETCHES = {
       <g class="gl-deck">${deckSlab(P)}</g>
       ${solids}
       <rect class="db-ph__line db-ph__head" x="236" y="14" width="40" height="2.4"/>
-      ${row(0, 0.1, 30, 'gl-bar--green')}${row(1, 0.4, 46, 'gl-bar--green')}${row(2, 0.68, 64, 'gl-bar--res')}`;
+      ${row(0, 0.06, 30, 'gl-bar--green')}${row(1, 0.28, 46, 'gl-bar--green')}${row(2, 0.49, 64, 'gl-bar--res')}
+      ${graph}`;
   },
 
   /* S9 — greenery & solar income: heat map of yearly sun on the deck + what to plant / where PV pays */
@@ -1376,24 +1440,17 @@ const SKETCHES = {
       return `<polygon class="sol s${bucket(c.v)}" style="--d:${d.toFixed(0)}ms" points="${pts(P, [[c.x0, c.y0, z], [c.x1, c.y0, z], [c.x1, c.y1, z], [c.x0, c.y1, z]])}"/>`;
     }).join('');
     const pylons = D.pylons.map((b) => box(P, { ...b, z0: 30 }, 'sb-pylon')).join('');
-    // use volumes: planting green, the rest neutral; PV on every sloped side that faces the sun
-    // (outward normal towards south, east or west), as rows running up the slope
-    const objects = ALL_USE_BOXES.slice().sort(byDepth).map((o) => {
+    // use volumes: planting green, the rest neutral; PV on the roofs of the upper levels (the base
+    // levels' roofs are terraces), 1 m in from the edges, as rows running east–west
+    const objects = ALL_USE_BOXES.slice().sort(byStack).map((o) => {
       if (o.use === 'green') return useVolume(P, o, 'use-box use-green is-focus');
       let svg = useVolume(P, o, o.use === 'res' ? 'use-box use-res is-focus' : 'use-box sb-pav');
-      const n = o.poly.length;
-      for (let i = 0; i < n; i++) {
-        const j = (i + 1) % n, [ax, ay] = o.poly[i], [bx, by] = o.poly[j], l = Math.hypot(bx - ax, by - ay);
-        if (l < 6 || (bx - ax) / l < 0.25) continue;                // outward normal (dy, -dx)/l: keep the ones facing south-ish
-        if (-(by - ay) - (ax - bx) <= 0) continue;                  // and only the sides the camera sees
-        const [tax, tay] = o.top[i], [tbx, tby] = o.top[j];
-        const face = [P(ax, ay, o.z0), P(bx, by, o.z0), P(tbx, tby, o.z1), P(tax, tay, o.z1)];
-        svg += `<path class="sol-pv-face" d="${dPath(face)}"/>`;
-        const rows = Math.max(2, Math.floor(l / 2.6));
-        for (let k = 1; k < rows; k++) {
-          const t = k / rows, lo = P(ax + (bx - ax) * t, ay + (by - ay) * t, o.z0 + 0.3), hi = P(tax + (tbx - tax) * t, tay + (tby - tay) * t, o.z1 - 0.3);
-          svg += `<line class="sol-pv" x1="${f(lo[0])}" y1="${f(lo[1])}" x2="${f(hi[0])}" y2="${f(hi[1])}"/>`;
-        }
+      if (o.z0 === dk.z1) return svg;
+      const x0 = o.x0 + 1, x1 = o.x1 - 1, y0 = o.y0 + 1, y1 = o.y1 - 1, zt = o.z1 + 0.1;
+      svg += `<path class="sol-pv-face" d="${dPath([P(x0, y0, zt), P(x1, y0, zt), P(x1, y1, zt), P(x0, y1, zt)])}"/>`;
+      for (let y = y0 + 2.6; y < y1 - 0.5; y += 2.6) {
+        const [ax, ay] = P(x0, y, zt), [bx, by] = P(x1, y, zt);
+        svg += `<line class="sol-pv" x1="${f(ax)}" y1="${f(ay)}" x2="${f(bx)}" y2="${f(by)}"/>`;
       }
       return svg;
     }).join('');
@@ -1645,7 +1702,7 @@ function render(el, data, ctl = {}) {
   const cells = [...el.querySelectorAll('.sb-cell, .sb-thumb')];
 
   // Sequenced sketches pick the moment that tells the most when motion is reduced (e.g. the window view in S4).
-  const STILL = { split: 12, 'district-heat': 12, sun: 5.5, layers: 4, 'district-border': 14, 'raumpark-rise': 14, uses: 38, 'sun-hours': 6, 'green-living': 13 };
+  const STILL = { split: 12, 'district-heat': 12, sun: 5.5, layers: 4, 'district-border': 14, 'raumpark-rise': 14, uses: 38, 'sun-hours': 6, 'green-living': 19 };
   let pos = 0, cur = -1, playing = false, last = 0, visible = false, gen = 0, figure = null;
   const shotAt = (x) => Math.max(0, shots.findIndex((s) => x >= s.start && x < s.start + s.duration));
 

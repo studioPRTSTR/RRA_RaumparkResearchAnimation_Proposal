@@ -347,6 +347,7 @@ html.sb-fs-lock { overflow: hidden; }
 .nf { fill: none; }
 .k-sil { stroke: var(--k-sil); stroke-width: 0.3; stroke-linecap: round; }
 .k-cr { stroke: var(--k-cr); stroke-width: 0.22; stroke-linecap: round; }
+.k-fl { fill: none; stroke: color-mix(in srgb, var(--ink) 50%, transparent); stroke-width: 0.24; }   /* storey lines on the Raumpark volumes */
 .sb-bg { fill: var(--paper); }
 .sb-ground { fill: var(--paper-2); stroke: var(--k-sil); stroke-width: 0.3; }
 .sb-context { fill: none; stroke: var(--k-cr); stroke-width: 0.25; }
@@ -413,27 +414,47 @@ html.sb-fs-lock { overflow: hidden; }
 .sh-flow--deck { stroke: color-mix(in srgb, var(--wind) 75%, var(--ink)); stroke-width: 0.55; }
 .sh-eddy { stroke-width: 0.4; }
 
-/* S10: green space and housing. All grey; one quantity at a time in colour (timed via --shot):
-   the city's parks 8–62 %, the Raumpark's green 38–62 %, the housing (with its storeys) from 66 % */
+/* S10: green space, housing, density. All grey; one quantity at a time in colour (timed via --shot):
+   the city's parks 6–46 %, the Raumpark's green 28–46 %, the housing (with its storeys) 49–70 %,
+   then the density: the city neutral, the whole Raumpark in the accent, with the graph */
 [data-sketch="green-living"] {
   --gl-off: color-mix(in srgb, var(--ink) 9%, var(--paper));
   --gl-off-s: color-mix(in srgb, var(--ink) 16%, var(--paper));
+  --gl-built: color-mix(in srgb, var(--ink) 26%, var(--paper));
+  --gl-built-s: color-mix(in srgb, var(--ink) 38%, var(--paper));
+  --gl-acc: color-mix(in srgb, var(--sun) 60%, var(--paper));
+  --gl-acc-s: var(--sun);
 }
 [data-sketch="green-living"] :is(.sb-block, .sb-hall, .sb-pylon, .gl-deck, .gl-sol) .f-t { fill: var(--gl-off); }
 [data-sketch="green-living"] :is(.sb-block, .sb-hall, .sb-pylon, .gl-deck, .gl-sol) .f-s { fill: var(--gl-off-s); }
-[data-sketch="green-living"] .sb-park { --off: var(--gl-off); --on: color-mix(in srgb, var(--park) 60%, var(--paper)); animation: gl-city var(--shot, 20s) linear both; }
-[data-sketch="green-living"] .sb-tree { --off: var(--gl-off-s); --on: var(--park); animation: gl-city var(--shot, 20s) linear both; }
-[data-sketch="green-living"] :is(.gl-deck, .gl-green) .f-t { --off: var(--gl-off); --on: color-mix(in srgb, var(--park) 60%, var(--paper)); animation: gl-park var(--shot, 20s) linear both; }
-[data-sketch="green-living"] :is(.gl-deck, .gl-green) .f-s { --off: var(--gl-off-s); --on: color-mix(in srgb, var(--park) 85%, var(--ink)); animation: gl-park var(--shot, 20s) linear both; }
-[data-sketch="green-living"] .gl-res .f-t { --off: var(--gl-off); --on: color-mix(in srgb, var(--use-res) 50%, var(--paper)); animation: gl-res var(--shot, 20s) linear both; }
-[data-sketch="green-living"] .gl-res .f-s { --off: var(--gl-off-s); --on: color-mix(in srgb, var(--use-res) 85%, var(--paper)); animation: gl-res var(--shot, 20s) linear both; }
-.gl-floors { fill: none; stroke: color-mix(in srgb, var(--use-res) 40%, var(--ink)); stroke-width: 0.22; animation: gl-floors var(--shot, 20s) linear both; }
+[data-sketch="green-living"] :is(.sb-park, .sb-tree, .gl-deck .f-t, .gl-deck .f-s, .gl-sol .f-t, .gl-sol .f-s, .gl-cres .f-t, .gl-cres .f-s) {
+  animation-duration: var(--shot, 20s); animation-timing-function: linear; animation-fill-mode: both;
+}
+[data-sketch="green-living"] .sb-park { --off: var(--gl-off); --on: color-mix(in srgb, var(--park) 60%, var(--paper)); animation-name: gl-city; }
+[data-sketch="green-living"] .sb-tree { --off: var(--gl-off-s); --on: var(--park); animation-name: gl-city; }
+[data-sketch="green-living"] .gl-deck .f-t { --off: var(--gl-off); --on: color-mix(in srgb, var(--park) 60%, var(--paper)); animation-name: gl-park; }
+[data-sketch="green-living"] .gl-deck .f-s { --off: var(--gl-off-s); --on: color-mix(in srgb, var(--park) 85%, var(--ink)); animation-name: gl-park; }
+[data-sketch="green-living"] .gl-rgreen .f-t { --off: var(--gl-off); --on: color-mix(in srgb, var(--park) 60%, var(--paper)); --end: var(--gl-acc); animation-name: gl-rgreen; }
+[data-sketch="green-living"] .gl-rgreen .f-s { --off: var(--gl-off-s); --on: color-mix(in srgb, var(--park) 85%, var(--ink)); --end: var(--gl-acc-s); animation-name: gl-rgreen; }
+[data-sketch="green-living"] .gl-rres .f-t { --off: var(--gl-off); --on: color-mix(in srgb, var(--use-res) 50%, var(--paper)); --end: var(--gl-acc); animation-name: gl-res; }
+[data-sketch="green-living"] .gl-rres .f-s { --off: var(--gl-off-s); --on: color-mix(in srgb, var(--use-res) 85%, var(--paper)); --end: var(--gl-acc-s); animation-name: gl-res; }
+[data-sketch="green-living"] .gl-cres .f-t { --off: var(--gl-off); --on: color-mix(in srgb, var(--use-res) 50%, var(--paper)); --end: var(--gl-built); animation-name: gl-res; }
+[data-sketch="green-living"] .gl-cres .f-s { --off: var(--gl-off-s); --on: color-mix(in srgb, var(--use-res) 85%, var(--paper)); --end: var(--gl-built-s); animation-name: gl-res; }
+[data-sketch="green-living"] .gl-rother .f-t { --off: var(--gl-off); --end: var(--gl-acc); animation-name: gl-rother; }
+[data-sketch="green-living"] .gl-rother .f-s { --off: var(--gl-off-s); --end: var(--gl-acc-s); animation-name: gl-rother; }
+.gl-floors { fill: none; stroke: color-mix(in srgb, var(--ink) 45%, transparent); stroke-width: 0.22; animation: gl-floors var(--shot, 20s) linear both; }
 .gl-bar--green { fill: var(--park); }
 .gl-bar--res { fill: var(--use-res); }
-@keyframes gl-city { 0%, 8% { fill: var(--off); } 11%, 62% { fill: var(--on); } 66%, 100% { fill: var(--off); } }
-@keyframes gl-park { 0%, 38% { fill: var(--off); } 41%, 62% { fill: var(--on); } 66%, 100% { fill: var(--off); } }
-@keyframes gl-res { 0%, 66% { fill: var(--off); } 70%, 100% { fill: var(--on); } }
-@keyframes gl-floors { 0%, 66% { opacity: 0; } 70%, 100% { opacity: 1; } }
+.gl-axis { fill: none; stroke: var(--ink-3); stroke-width: 0.4; }
+.gl-col { fill: var(--gl-built); }
+.gl-col--add { fill: var(--sun); }
+.gl-pct { font: 600 7px var(--font-mono); fill: var(--sun); text-anchor: middle; }
+@keyframes gl-city { 0%, 6% { fill: var(--off); } 9%, 46% { fill: var(--on); } 49%, 100% { fill: var(--off); } }
+@keyframes gl-park { 0%, 28% { fill: var(--off); } 31%, 46% { fill: var(--on); } 49%, 100% { fill: var(--off); } }
+@keyframes gl-rgreen { 0%, 28% { fill: var(--off); } 31%, 46% { fill: var(--on); } 49%, 70% { fill: var(--off); } 73%, 100% { fill: var(--end); } }
+@keyframes gl-res { 0%, 49% { fill: var(--off); } 52%, 70% { fill: var(--on); } 73%, 100% { fill: var(--end); } }
+@keyframes gl-rother { 0%, 70% { fill: var(--off); } 73%, 100% { fill: var(--end); } }
+@keyframes gl-floors { 0%, 49% { opacity: 0; } 52%, 100% { opacity: 1; } }
 .hm-pylon .f-s, .hm-pylon .f-t { fill: rgb(150, 186, 220); }
 .hm-pylon .k-sil, .hm-pylon .k-cr, .hm-deck .k-sil, .hm-deck .k-cr { stroke: color-mix(in srgb, var(--ink) 55%, transparent); stroke-width: 0.3; }
 .hm-deck .f-t { fill: rgb(196, 214, 232); }

@@ -109,7 +109,7 @@
       "sketch": "split",
       "title": "Window & model, side by side",
       "kicker": "Sequence · district to room",
-      "duration": 25,
+      "duration": 20,
       "scale": [
         "district",
         "room"
@@ -148,7 +148,7 @@
       ],
       "idea": "A diagram over the whole deck: a heat map of how much sun each part receives over the year, with the use volumes casting their shade. From it follows where planting thrives, where shade-loving planting belongs, and where PV pays off, with the share of each shown as bars.",
       "camera": "Top-down / isometric diagram, heat map sweeps in",
-      "graphics": "Yearly sun on the deck in gold · PV on the sloped, sun-facing sides of the volumes · scale",
+      "graphics": "Yearly sun on the deck in gold · PV on the roofs of the upper levels · scale",
       "data": "Yearly sun on the deck (calculated) · planting and PV assumptions",
       "transition": "Same camera, the model turns grey"
     },
@@ -156,16 +156,16 @@
       "code": "S10",
       "tier": "core",
       "sketch": "green-living",
-      "title": "Green space & housing",
-      "kicker": "Isometric · one quantity at a time, with its figure",
-      "duration": 15,
+      "title": "Green space, housing & density",
+      "kicker": "Isometric · one quantity at a time, then the density",
+      "duration": 20,
       "scale": [
         "district"
       ],
-      "idea": "What the Raumpark adds, in figures. The whole model turns grey and one quantity at a time is shown in colour, with its figure top right: first the green space the district has today (its parks), then the Raumpark's green added to it (the planted deck and the green volume), so the bar for green space grows; then the residential floors, storey by storey, in the existing blocks and in the Raumpark's housing.",
+      "idea": "What the Raumpark adds, in figures. The whole model turns grey and one quantity at a time is shown in colour, with its figure top right: first the green space the district has today (its parks), then the Raumpark's green added to it (the planted deck and the green volume), so the bar for green space grows; then the residential floors, storey by storey, in the existing blocks and in the Raumpark's housing. Last the density: the existing city turns neutral and the whole Raumpark lights up in one accent, while a graph shows the floor area of the district today and with the Raumpark stacked on top, with the increase in per cent.",
       "camera": "Same isometric view, still",
-      "graphics": "Grey model · parks, then Raumpark green, then housing with storey lines in colour · figures as label + bar (placeholders)",
-      "data": "Green space today and with the Raumpark, residential floor area, population (from the research team)"
+      "graphics": "Grey model · parks, then Raumpark green, then housing with storey lines in colour · figures as label + bar (placeholders) · density: city neutral, Raumpark in accent, bar graph today / with Raumpark, + %",
+      "data": "Green space today and with the Raumpark, residential floor area, population, gross floor area of the district today and with the Raumpark (from the research team; the sketch computes it from the schematic model)"
     }
   ]
 }
