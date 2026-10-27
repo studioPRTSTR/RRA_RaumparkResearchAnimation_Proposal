@@ -3,7 +3,7 @@
   "weeks": 18,
   "phases": [
     {
-      "label": "Package 1 · 3-min film S1–S12",
+      "label": "Package 1 · 3-min film S1–S10",
       "start": "2026-10-28",
       "end": "2027-01-15"
     },
@@ -54,67 +54,55 @@
           "tone": "heat"
         },
         {
-          "label": "S2 Westbahnhof sun & shade (summer / winter)",
+          "label": "S2 Westbahnhof: the district and its border",
+          "start": "2026-11-09",
+          "end": "2026-11-20",
+          "tone": "neutral"
+        },
+        {
+          "label": "S3 Raumpark: a second city, one level up",
+          "start": "2026-11-16",
+          "end": "2026-11-27",
+          "tone": "park"
+        },
+        {
+          "label": "S4 Westbahnhof sun & shade (summer / winter)",
           "start": "2026-11-16",
           "end": "2026-12-11",
           "tone": "sun"
         },
         {
-          "label": "S3 Westbahnhof heat: without / with",
+          "label": "S5 Westbahnhof heat: without / with",
           "start": "2026-11-16",
           "end": "2026-12-04",
           "tone": "heat"
         },
         {
-          "label": "S4 Westbahnhof wind",
+          "label": "S6 Westbahnhof wind",
           "start": "2026-11-23",
           "end": "2026-12-18",
           "tone": "wind"
         },
         {
-          "label": "S5 Layers: what the Raumpark is made of",
+          "label": "S7 Layers: what the Raumpark is made of",
           "start": "2026-12-14",
           "end": "2026-12-18",
           "tone": "park"
         },
         {
-          "label": "S6 Window & model split screen",
+          "label": "S8 Window & model split screen",
           "start": "2026-11-30",
           "end": "2027-01-08",
           "tone": "sun"
         },
         {
-          "label": "S7 Culture",
+          "label": "S9 Quality of sunlight",
           "start": "2026-12-07",
-          "end": "2026-12-18",
-          "tone": "culture"
-        },
-        {
-          "label": "S8 Health & wellbeing",
-          "start": "2026-12-07",
-          "end": "2026-12-18",
-          "tone": "health"
-        },
-        {
-          "label": "S9 Residential",
-          "start": "2026-12-14",
           "end": "2027-01-08",
-          "tone": "res"
+          "tone": "sun"
         },
         {
-          "label": "S10 Green areas",
-          "start": "2026-12-14",
-          "end": "2027-01-08",
-          "tone": "park"
-        },
-        {
-          "label": "S11 Circulation",
-          "start": "2026-12-07",
-          "end": "2026-12-18",
-          "tone": "neutral"
-        },
-        {
-          "label": "S12 Greenery & solar income",
+          "label": "S10 Greenery & solar income",
           "start": "2026-11-30",
           "end": "2026-12-18",
           "tone": "sun"

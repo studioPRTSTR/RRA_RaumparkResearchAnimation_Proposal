@@ -5,25 +5,27 @@
    ========================================================================== */
 
 :root {
-  --paper: #f2f0eb;      /* sheet */
-  --paper-2: #e7e4dc;    /* ground, panels */
-  --paper-3: #dcd8ce;
-  --ink: #1f201d;
-  --ink-2: #57554e;
-  --ink-3: #8a877e;
-  --rule: #c9c4b8;
-  --rule-strong: #8f8a7f;
-  --stone: #b3ada0;      /* limestone grey: facades */
-  --stone-top: #d8d3c8;  /* roofs */
-  --sun: #b47b12;        /* ochre */
-  --wind: #2b67a6;       /* blue */
-  --park: #4a8646;       /* green: Raumpark layer */
-  --heat: #e5735a;       /* coral: hot end of the heat maps */
+  /* clean black and white: neutral greys only; colour is kept for the data (sun, wind, heat, uses, park) */
+  --paper: #ffffff;      /* sheet */
+  --paper-2: #f3f3f3;    /* ground, panels */
+  --paper-3: #e4e4e4;
+  --ink: #262626;          /* soft black */
+  --ink-2: #555555;
+  --ink-3: #8a8a8a;
+  --rule: #d2d2d2;
+  --rule-strong: #8c8c8c;
+  --stone: #bdbdbd;      /* facades */
+  --stone-top: #e2e2e2;  /* roofs */
+  --sun: #b8924a;        /* ochre */
+  --sun-disc: #f0c85a;   /* the sun itself: yellow */
+  --wind: #4877a6;       /* blue */
+  --park: #5f8f59;       /* green: Raumpark layer */
+  --heat: #dc7e68;       /* coral: hot end of the heat maps */
   --bldg: #ffffff;       /* Gründerzeit buildings in the sketches: white */
-  --use-culture: #9a4f86; /* uses on the deck */
-  --use-health: #2a8a84;
-  --use-res: #8a6a45;
-  --shadow: #2d2c3a;
+  --use-culture: #94608a; /* uses on the deck */
+  --use-health: #3f8c86;
+  --use-res: #8f7352;
+  --shadow: #000000;
   --shadow-alpha: 0.27;
   --sun-soft: color-mix(in srgb, var(--sun) 18%, transparent);
   --focus: var(--wind);
@@ -38,48 +40,50 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #161714;
-    --paper-2: #1f201c;
-    --paper-3: #2a2b26;
-    --ink: #ebe7de;
-    --ink-2: #aaa69c;
-    --ink-3: #7a776e;
-    --rule: #3a3a34;
-    --rule-strong: #64625a;
-    --stone: #5f5b53;
-    --stone-top: #8d887d;
-    --sun: #e0a740;
-    --wind: #5ea2e4;
-    --park: #74b26c;
-    --heat: #ec8466;
-    --bldg: #1f201c;
-    --use-culture: #cf86bd;
-    --use-health: #5cc0b8;
-    --use-res: #c49d70;
+    --paper: #141414;
+    --paper-2: #1c1c1c;
+    --paper-3: #282828;
+    --ink: #e6e6e6;
+    --ink-2: #b0b0b0;
+    --ink-3: #7c7c7c;
+    --rule: #2e2e2e;
+    --rule-strong: #5c5c5c;
+    --stone: #555555;
+    --stone-top: #8a8a8a;
+    --sun: #d6ad6a;
+    --sun-disc: #ecc966;
+    --wind: #7eaad8;
+    --park: #86b67f;
+    --heat: #e69580;
+    --bldg: #000000;
+    --use-culture: #c48db6;
+    --use-health: #76bdb6;
+    --use-res: #c2a27e;
     --shadow: #000000;
     --shadow-alpha: 0.5;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --paper: #161714;
-  --paper-2: #1f201c;
-  --paper-3: #2a2b26;
-  --ink: #ebe7de;
-  --ink-2: #aaa69c;
-  --ink-3: #7a776e;
-  --rule: #3a3a34;
-  --rule-strong: #64625a;
-  --stone: #5f5b53;
-  --stone-top: #8d887d;
-  --sun: #e0a740;
-  --wind: #5ea2e4;
-  --park: #74b26c;
-  --heat: #ec8466;
-  --bldg: #1f201c;
-  --use-culture: #cf86bd;
-  --use-health: #5cc0b8;
-  --use-res: #c49d70;
+  --paper: #141414;
+  --paper-2: #1c1c1c;
+  --paper-3: #282828;
+  --ink: #e6e6e6;
+  --ink-2: #b0b0b0;
+  --ink-3: #7c7c7c;
+  --rule: #2e2e2e;
+  --rule-strong: #5c5c5c;
+  --stone: #555555;
+  --stone-top: #8a8a8a;
+  --sun: #d6ad6a;
+  --sun-disc: #ecc966;
+  --wind: #7eaad8;
+  --park: #86b67f;
+  --heat: #e69580;
+  --bldg: #000000;
+  --use-culture: #c48db6;
+  --use-health: #76bdb6;
+  --use-res: #c2a27e;
   --shadow: #000000;
   --shadow-alpha: 0.5;
   color-scheme: dark;
@@ -162,7 +166,7 @@ button, input, select { font: inherit; color: inherit; }
 .hero__head, .hero__text { display: flex; flex-direction: column; gap: 22px; }
 .eyebrow { font-size: 11px; text-transform: uppercase; color: var(--ink-2); }
 h1 { font-size: clamp(40px, 4.4vw, 64px); }
-h1 em { font-style: normal; color: var(--park); }
+h1 em { font-style: normal; color: var(--ink); font-weight: 500; }
 .lede { font-size: clamp(16px, 1.3vw, 18px); color: var(--ink-2); max-width: 46ch; }
 .figures { display: grid; grid-template-columns: 1fr 1fr; margin: 0; border-top: var(--hair) solid var(--ink); }
 .figures div { padding: 10px 0 12px; border-bottom: var(--hair) solid var(--rule); }
@@ -237,6 +241,20 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
 .sb-frame { margin: 0; border: var(--hair) solid var(--ink); background: var(--paper); }
 .sb-frame svg { display: block; width: 100%; height: 100%; }
 .sb-frame figcaption { display: flex; justify-content: space-between; gap: 12px; padding: 6px 10px; border-top: var(--hair) solid var(--rule); font: 10px var(--font-mono); text-transform: uppercase; color: var(--ink-3); }
+/* arrange bar above the strip */
+.sb-strip-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.sb-strip-bar .btn { height: 28px; padding: 0 10px; }
+.sb-strip-bar .btn[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.sb-strip-hint { font: 10.5px var(--font-mono); text-transform: uppercase; color: var(--ink-3); }
+.sb-strip.is-arranging li { cursor: grab; position: relative; }
+.sb-strip.is-arranging .sb-thumb { cursor: grab; }
+.sb-strip.is-arranging .sb-thumb__frame { stroke-dasharray: 4 3; }
+.sb-strip li.is-dragging { opacity: 0.35; }
+.sb-strip li.is-over .sb-thumb__frame { stroke: var(--ink); stroke-width: 2.5; }
+.sb-move { display: flex; gap: 4px; margin-top: 4px; }
+.sb-move button { flex: 1; height: 22px; border: var(--hair) solid var(--rule-strong); background: var(--paper); color: var(--ink); cursor: pointer; font-size: 11px; border-radius: 2px; }
+.sb-move button:disabled { opacity: 0.3; cursor: default; }
+
 /* storyboard strip: one small outline frame per shot */
 .sb-strip { list-style: none; margin: 0; padding: 0 0 4px; display: grid; grid-template-columns: repeat(var(--n, 12), minmax(84px, 1fr)); gap: 8px; overflow-x: auto; }
 .sb-thumb { display: flex; flex-direction: column; gap: 4px; width: 100%; padding: 0; border: 0; background: none; cursor: pointer; font: 500 10px var(--font-mono); color: var(--ink-3); text-align: left; }
@@ -298,6 +316,10 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
 .sb-plate-edge { stroke-width: 0.5; }
 .sb-park { fill: color-mix(in srgb, var(--park) 26%, var(--paper-2)); stroke: var(--k-cr); stroke-width: 0.22; }
 .sb-tree { fill: color-mix(in srgb, var(--park) 55%, var(--paper)); stroke: color-mix(in srgb, var(--park) 75%, var(--ink)); stroke-width: 0.22; }
+/* S3: what reaches up from the city */
+.rp-src .k-cr { stroke: color-mix(in srgb, var(--use) 40%, var(--ink)); stroke-width: 0.3; }
+.rp-climb { fill: none; stroke: var(--park); stroke-width: 0.7; stroke-linejoin: round; }
+.rp-core .f-s, .rp-core .f-t { fill: color-mix(in srgb, var(--ink) 30%, var(--paper)); }
 .sb-block .f-s, .sb-block .f-t { fill: var(--bldg); }
 .sb-hall .f-t { fill: var(--paper); }
 .sb-hall .f-s { fill: var(--paper-3); }
@@ -306,10 +328,15 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
 .sb-deck .f-s { fill: color-mix(in srgb, var(--park) 62%, var(--paper)); }
 .sb-deck .k-sil { stroke: color-mix(in srgb, var(--park) 45%, var(--ink)); }
 .sb-pav .f-s, .sb-pav .f-t { fill: var(--paper); }
+.use-box.sb-pav .k-sil { stroke: var(--k-sil); } .use-box.sb-pav .k-cr { stroke: var(--k-cr); }
 .sb-shadow { fill: var(--shadow); fill-opacity: 0.32; }
-.sb-arc { fill: none; stroke: var(--sun); stroke-width: 0.8; stroke-dasharray: 3 2; }
-.sb-tick, .sb-sun circle, .sb-mark { fill: var(--sun); }
-.sb-sun .sb-sun-halo { fill: none; stroke: var(--sun); stroke-width: 0.6; opacity: 0.7; }
+.sb-arc { fill: none; stroke: var(--ink-3); stroke-width: 0.6; stroke-linecap: round; opacity: 0.8; }
+.sb-tick { display: none; }
+.sb-hour { font: 500 4.6px var(--font-mono); fill: var(--ink-2); text-anchor: middle; paint-order: stroke; stroke: var(--paper); stroke-width: 1.4px; stroke-linejoin: round; }
+.sb-hour-dot { fill: var(--ink-3); }
+.sb-sun circle { fill: var(--sun-disc); }
+.sb-mark { fill: var(--sun); }
+.sb-sun .sb-sun-halo { fill: none; stroke: var(--sun-disc); stroke-width: 0.6; opacity: 0.8; }
 .sb-mark-ring { fill: none; stroke: var(--sun); stroke-width: 0.8; transform-box: fill-box; transform-origin: center; animation: sb-pulse 1.8s ease-out infinite; }
 .sb-t { font: 500 6px var(--font-mono); letter-spacing: 0.04em; fill: var(--ink-2); paint-order: stroke; stroke: var(--paper); stroke-width: 2px; stroke-linejoin: round; }
 .sb-t--strong { fill: var(--ink); font-weight: 600; }
@@ -317,22 +344,43 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
 .sb-t--wind { fill: var(--wind); }
 .sb-line { fill: none; stroke: var(--ink); stroke-width: 0.6; }
 .sb-dash { stroke-dasharray: 2 2; }
-.sb-river { fill: none; stroke: var(--wind); stroke-width: 5; stroke-linecap: round; opacity: 0.45; }
-.sb-canal { fill: none; stroke: var(--wind); stroke-width: 1.6; opacity: 0.6; }
+.sb-river { fill: none; stroke: var(--ink); stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; }
+.sb-canal { fill: none; stroke: var(--ink); stroke-width: 0.6; stroke-linecap: round; stroke-linejoin: round; }
 .sb-city { fill: none; stroke: var(--ink); stroke-width: 0.8; stroke-linejoin: round; }
 .sb-scalebar path { fill: none; stroke: var(--ink); stroke-width: 0.8; }
 .sb-credit { font-size: 4.2px; fill: var(--ink-3); }
 .sb-north path { fill: none; stroke: var(--ink); stroke-width: 1.2; stroke-linecap: round; }
 .sb-north polygon, .sb-north circle { fill: none; stroke: var(--ink); stroke-width: 0.8; }
 /* heat maps (S1, S2): steel blue → cool grey → pale peach → orange → coral */
-.h1 { fill: #8eaecd; }
-.h2 { fill: #c4d2df; }
-.h3 { fill: #f1dccb; }
-.h4 { fill: #ee9a63; }
-.h5 { fill: #e5735a; }
+.h1 { fill: #8aaacb; }
+.h2 { fill: #c2d0de; }
+.h3 { fill: #efdfcf; }
+.h4 { fill: #e7a37a; }
+.h5 { fill: #dc7e68; }
 .dh { stroke: var(--paper); stroke-width: 0.25; }
-.dh1 { fill: #8eaecd; } .dh2 { fill: #b3c6d9; } .dh3 { fill: #d6dde4; } .dh4 { fill: #f1dccb; }
-.dh5 { fill: #f3bb92; } .dh6 { fill: #ee9a63; } .dh7 { fill: #e5735a; }
+.dh1 { fill: #4f86c6; } .dh2 { fill: #86acd9; } .dh3 { fill: #c3d5ea; } .dh4 { fill: #f4dcc2; }
+.dh5 { fill: #f5a46e; } .dh6 { fill: #ec7d45; } .dh7 { fill: #db5532; }
+.dh-field { mix-blend-mode: multiply; }
+:root[data-theme="dark"] .dh-field { mix-blend-mode: normal; opacity: 0.8; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .dh-field { mix-blend-mode: normal; opacity: 0.8; } }
+.sb-ground--open { stroke: none; }
+.dh-lines polygon, .dh-lines path { fill: none !important; stroke: var(--ink); stroke-width: 0.35; stroke-opacity: 0.7; }
+/* S4: solar heat map */
+.hm-edge { stroke: color-mix(in srgb, var(--ink) 55%, transparent); stroke-width: 0.3; stroke-linejoin: round; }
+.hm-roof { fill: none; }
+/* S9: sun hours — the deck keeps a clear edge over the raster */
+.sh-deck-edge { fill: none; stroke: color-mix(in srgb, var(--park) 60%, var(--ink)); stroke-width: 0.7; stroke-linejoin: round; }
+.hm-pylon .f-s, .hm-pylon .f-t { fill: rgb(128, 22, 176); }
+.hm-pylon .k-sil, .hm-pylon .k-cr, .hm-deck .k-sil, .hm-deck .k-cr { stroke: color-mix(in srgb, var(--ink) 55%, transparent); stroke-width: 0.3; }
+.hm-deck .f-t { fill: rgb(255, 233, 44); }
+.hm-deck .f-s { fill: rgb(247, 130, 26); }
+/* S6: layers */
+.ly-drop { fill: none; stroke: var(--ink-3); stroke-width: 0.5; }
+/* S2: the surrounding buildings fade back after a moment (timed to the shot via --shot) */
+.db-ctx path { animation: db-grey var(--shot, 15s) linear both; }
+.db-ctx { animation: db-fade var(--shot, 15s) linear both; }
+@keyframes db-grey { 0%, 25% { fill: var(--bldg); stroke-opacity: 1; } 50%, 100% { fill: var(--paper-3); stroke-opacity: 0.2; } }
+@keyframes db-fade { 0%, 25% { opacity: 1; } 50%, 100% { opacity: 0.35; } }
 .dh-deck .f-t { fill-opacity: 0.35; }
 .dh-deck .f-s { fill-opacity: 0.55; }
 .sb-heat circle { animation: sb-heat 3.6s ease-in-out infinite; animation-delay: var(--d, 0ms); }
@@ -404,7 +452,8 @@ h2 { font-size: clamp(30px, 3.6vw, 48px); }
 .sol-cells .sol { stroke: var(--paper); stroke-width: 0.3; animation: sol-cell var(--shot, 10s) ease-out both; animation-delay: var(--d); }
 .sol-track { fill: var(--paper-3); }
 .sol-bar { transform-box: fill-box; transform-origin: left; animation: sol-bar var(--shot, 10s) ease-out both; animation-delay: var(--d); }
-.sol-pv { stroke: var(--wind); stroke-width: 0.6; }
+.sol-pv { stroke: var(--wind); stroke-width: 0.45; }
+.sol-pv-face { fill: color-mix(in srgb, var(--wind) 38%, var(--paper)); stroke: var(--wind); stroke-width: 0.35; stroke-linejoin: round; }
 
 .circ-trace { fill: none; stroke: var(--ink-3); stroke-width: 0.6; stroke-dasharray: 2 2; }
 .circ-route { fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }

@@ -1,7 +1,7 @@
 # Raumpark Vienna — visualisation proposal
 
 Single-page site presenting the animation & infographic proposal for Raumpark Vienna:
-a short intro, the storyboard (Package 1, 3 minutes, 12 shots) and the timetable.
+a short intro, the storyboard (Package 1, 3 minutes, 10 shots) and the timetable.
 Plain HTML, CSS and ES-module JavaScript, with no build step.
 
 Proposal by Manuel Gruber · _studiogruber
@@ -27,30 +27,37 @@ js/sun.js            solar position (NOAA), used for the sun arc, shadows and so
 js/config.js         site location and key dates for the sun calculations
 js/vienna.js         Vienna's outline and the Danube for S1 (© OpenStreetMap contributors, ODbL)
 js/gantt.js          timetable built from data/timeline.json
-js/hairline/         line figure for S5 (see below)
-data/storyboard.json shots S1–S12: duration, scale, idea, camera, graphics, data
+js/hairline/         Hairline engine and line figure (not used by the storyboard at the moment, see below)
+data/storyboard.json shots S1–S10: duration, scale, idea, camera, graphics, data
 data/timeline.json   18-week Gantt: two packages, holiday break, milestones
 ```
 
 ## Editing the storyboard
 
+**Arranging the shots:** press "Arrange shots" above the strip, then drag the frames (or use ← →)
+into a new order; the player, timeline and shot numbers follow at once. The order is kept in this
+browser only. "Export storyboard.json" downloads the data in the new order: save it over
+`data/storyboard.json` to make it permanent (then "Reset order"). The timetable's shot labels in
+`data/timeline.json` are not renumbered automatically.
+
 Above the screen, a storyboard strip shows every shot as a small frame with only the basic
 outline of its content (Vienna's contour, the district outline, the window); click one to jump there.
 The storyboard is a player: one big screen shows the current shot, the playhead runs through the
 3 minutes in real time and switches shots on its own. Click a shot in the timeline to play from its
-start, click the time ruler or scale track to jump to that moment, ◂◂ / ▸▸ or ← / → step between
+start, click the time ruler or scale track to jump to that moment, the ← / → buttons or arrow keys step between
 shots, space plays / pauses. The text under the timeline describes the shot on screen.
 
 Edit `data/storyboard.json`. Durations drive the timeline widths and timecodes; `scale` sets the
 zoom-level track (`city`, `district`, `street`, `room`; two values = split screen);
 `tier: "optional"` draws the shot hatched/dashed. Sketches are picked by the `sketch` key
-(`heatmap`, `district-heat`, `sun`, `wind`, `split`, `use-culture`, `use-health`, `use-res`, `use-green`, `circulation`,
-`solar`) in `js/storyboard.js`. A shot with a `figure` key (`layers`) shows a
-Hairline figure from `js/hairline/` instead; its `sketch` key then only picks the strip thumbnail.
+(`heatmap`, `district-border`, `raumpark-rise`, `district-heat`, `sun`, `wind`, `split`, `layers`, `sun-hours`,
+`solar`) in `js/storyboard.js`. A shot with a `figure` key shows a Hairline figure from
+`js/hairline/` instead; its `sketch` key then only picks the strip thumbnail.
 
 ## Hairline figures
 
-S5 (layers) is drawn on the engine of [Hairline](https://github.com/lucasmarkes/hairline)
+S6 (layers) is now an SVG sketch on the same district as the other shots. The Hairline figure
+`layers.js` stays in the repo and can be put back with `"figure": "layers"`. It is drawn on the engine of [Hairline](https://github.com/lucasmarkes/hairline)
 (MIT, © Lucas Marques): isometric line figures that answer the pointer. `js/hairline/kernel.js` is the
 engine, copied unchanged from the `hairline-create` skill and loaded as a classic script (global `HL`);
 `layers.js` is the figure. The figures are made to answer a pointer; here the pointer

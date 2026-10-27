@@ -26,6 +26,38 @@
     {
       "code": "S2",
       "tier": "core",
+      "sketch": "district-border",
+      "title": "Westbahnhof: the district and its border",
+      "kicker": "Isometric · area overview → district",
+      "duration": 15,
+      "scale": [
+        "district"
+      ],
+      "idea": "A wider view of the area around Westbahnhof: every building stands alike, the district and its surroundings. Then the buildings around it fade back, and the district used in all the following shots stands out. The place and its current state, before anything is added.",
+      "camera": "Fixed isometric, wider than the following shots; the surroundings fade back",
+      "graphics": "Surroundings faded back · district in full",
+      "data": "District boundary and today's building stock of the wider area (3D model)",
+      "transition": "Same camera, the sun"
+    },
+    {
+      "code": "S3",
+      "tier": "core",
+      "sketch": "raumpark-rise",
+      "title": "Raumpark: a second city, one level up",
+      "kicker": "Isometric · the city's volumes taken up one level",
+      "duration": 15,
+      "scale": [
+        "district"
+      ],
+      "idea": "City design is also climate design, and vice versa. RAUMPARK stands for a new typology of cities in the era of the New Climatic Regime: urban expansions and densifications in the form of populated green spaces and forests above, and interlinked with, the existing city. The shot shows it with the city's own material: some blocks of the existing city take the colours of the uses (culture, health & wellbeing, residential, green areas). The pylons rise from the street crossings with green climbing them, and the deck spreads out along the streets. Then the coloured blocks' volumes are duplicated, lift off and deform into the volumes on the deck, mostly running in one direction: what the city has, taken up one level and reshaped to fit.",
+      "camera": "Fixed isometric, the view of the following shots; the Raumpark grows out of the district",
+      "graphics": "Blocks in use colours · pylons with climbing green · deck · duplicated volumes morphing onto the deck",
+      "data": "Raumpark concept: pylon positions, deck outline, programme (from the research team)",
+      "transition": "Same camera, the sun"
+    },
+    {
+      "code": "S4",
+      "tier": "core",
       "sketch": "sun",
       "title": "Westbahnhof: sun & shade, summer and winter",
       "kicker": "Isometric · district scale",
@@ -33,14 +65,14 @@
       "scale": [
         "district"
       ],
-      "idea": "The zoom lands on the district around Westbahnhof as an isometric model, with the Raumpark above it: a branching deck that grows along the streets. Two days run as time-lapses: 21 June, with the sun high on a long arc and a short shadow under the deck, then 21 December, with the sun low on a short arc and the deck's shadow stretching far across streets and courtyards. Both day arcs stay visible, so the difference reads at once.",
+      "idea": "Same view, the Raumpark now in place above the district. Two days run as time-lapses: 21 June, with the sun high on a long arc and a short shadow under the deck, then 21 December, with the sun low on a short arc and the deck's shadow stretching far across streets and courtyards. Both day arcs stay visible, so the difference reads at once.",
       "camera": "Fixed isometric · time-lapse 21 June, then 21 December",
       "graphics": "Summer and winter sun arcs · deck shadow",
       "data": "Sun position for Vienna on 21 June and 21 December (calculated) · 3D model of the area",
       "transition": "Same camera, heat"
     },
     {
-      "code": "S3",
+      "code": "S5",
       "tier": "core",
       "sketch": "district-heat",
       "title": "Westbahnhof: heat without / with Raumpark",
@@ -56,7 +88,7 @@
       "transition": "Same camera, new layer"
     },
     {
-      "code": "S4",
+      "code": "S6",
       "tier": "core",
       "sketch": "wind",
       "title": "Westbahnhof: wind",
@@ -73,41 +105,28 @@
       "transition": "Same camera, the model comes apart"
     },
     {
-      "code": "S5",
+      "code": "S7",
       "tier": "core",
       "sketch": "layers",
-      "figure": "layers",
       "title": "Layers",
       "kicker": "Exploded axo · city scale to deck",
-      "duration": 10,
+      "duration": 15,
       "scale": [
         "district"
       ],
-      "motion": [
-        { "t": 0, "at": null, "value": 30 },
-        { "t": 1.2, "at": [200, 215] },
-        { "t": 3, "at": [200, 215] },
-        { "t": 3.3, "at": [200, 182] },
-        { "t": 5, "at": [200, 182] },
-        { "t": 5.3, "at": [200, 159] },
-        { "t": 7, "at": [200, 159] },
-        { "t": 7.3, "at": [200, 138] },
-        { "t": 8.8, "at": [200, 138] },
-        { "t": 9, "at": null }
-      ],
-      "idea": "After the district's sun, heat and wind, the model comes apart into its layers: the existing city, the pylons over the street crossings, the deck that branches along the streets, and the use volumes on top. The stack opens at one layer after the other, from the city up, and each is named, so the viewer knows what the Raumpark is made of before it closes again and the camera goes down to one window.",
+      "idea": "After the district's sun, heat and wind, the same model comes apart into its layers: the existing city stays on the ground, then the pylons over the street crossings, the deck that branches along the streets and the use volumes on top lift away one after the other, thin lines marking where the pylons land. Then the stack closes again and the camera goes down to one window.",
       "camera": "Isometric, the stack opens at one layer after the other",
-      "graphics": "Exploded layers · dashed drops where the pylons land · layer name",
+      "graphics": "Exploded layers · lines where the pylons land",
       "data": "3D model of the district, split into layers",
       "transition": "Back together, push in on a window"
     },
     {
-      "code": "S6",
+      "code": "S8",
       "tier": "core",
       "sketch": "split",
       "title": "Window & model, side by side",
       "kicker": "Sequence · district to room",
-      "duration": 20,
+      "duration": 25,
       "scale": [
         "district",
         "room"
@@ -119,99 +138,34 @@
       "transition": "Up onto the deck"
     },
     {
-      "code": "S7",
-      "tier": "core",
-      "sketch": "use-culture",
-      "title": "Use: culture",
-      "kicker": "Isometric · deck use",
-      "duration": 15,
-      "scale": [
-        "district"
-      ],
-      "idea": "The whole deck in isometric view, every volume transparent. The culture volumes fade in from transparent to full colour: pavilions and event space at the western intersection.",
-      "camera": "Same isometric view of the whole deck, one use in colour, plan in the corner",
-      "graphics": "Use colour · volumes fading in · plan",
-      "data": "Programme and capacity of the culture zone",
-      "transition": "Next zone"
-    },
-    {
-      "code": "S8",
-      "tier": "core",
-      "sketch": "use-health",
-      "title": "Use: health & wellbeing",
-      "kicker": "Isometric · deck use",
-      "duration": 15,
-      "scale": [
-        "district"
-      ],
-      "idea": "Same view, next use: the health & wellbeing volumes (sport, pool, wellbeing) fade in on the eastern platforms, the rest stays transparent.",
-      "camera": "Same isometric view of the whole deck, one use in colour, plan in the corner",
-      "graphics": "Use colour · volumes fading in · plan",
-      "data": "Programme of the health zone",
-      "transition": "Next zone"
-    },
-    {
       "code": "S9",
       "tier": "core",
-      "sketch": "use-res",
-      "title": "Use: residential",
-      "kicker": "Isometric · deck use",
-      "duration": 15,
+      "sketch": "sun-hours",
+      "title": "Quality of sunlight",
+      "kicker": "Isometric · sun hours over 20 March, in one picture",
+      "duration": 30,
       "scale": [
         "district"
       ],
-      "idea": "Same view: the residential volumes, the tallest boxes on the deck, fade in on the central platform and show that people can live up here too.",
-      "camera": "Same isometric view of the whole deck, one use in colour, plan in the corner",
-      "graphics": "Use colour · volumes fading in · plan",
-      "data": "Housing type, units and areas",
-      "transition": "Next zone"
+      "idea": "How much sun reaches the people who live here, below the Raumpark and on it. The whole of 20 March, the equinox and the usual day for daylight studies, merged into one picture: the streets, courtyards, roofs and the deck show how many hours of direct sun they get over the day, from sky blue (little) to light orange (sun all day). The shadows of the existing blocks, the deck and its volumes are all in it, so the shot shows where the new level keeps light for the city below and where it gains the best light on top. The day's sun arc runs above, with its times.",
+      "camera": "Same isometric view, still; the camera drifts in slowly",
+      "graphics": "Sun hours on ground, roofs and deck · the day's sun arc with times · scale",
+      "data": "Sun position for Vienna on 20 March (calculated) · 3D model of the area and the Raumpark",
+      "transition": "Same camera, from light to energy"
     },
     {
       "code": "S10",
       "tier": "core",
-      "sketch": "use-green",
-      "title": "Use: green areas",
-      "kicker": "Isometric · deck use",
-      "duration": 15,
-      "scale": [
-        "district"
-      ],
-      "idea": "Same view: the low green volumes fade in along the arms of the deck as planted areas. It hands over directly to the solar diagram that follows.",
-      "camera": "Same isometric view of the whole deck, one use in colour, plan in the corner",
-      "graphics": "Use colour · volumes fading in · plan",
-      "data": "Planting concept, green area in m²",
-      "transition": "Next: how it connects"
-    },
-    {
-      "code": "S11",
-      "tier": "core",
-      "sketch": "circulation",
-      "title": "Circulation",
-      "kicker": "Isometric diagram · routes & access",
-      "duration": 15,
-      "scale": [
-        "district",
-        "street"
-      ],
-      "idea": "A line builds up through the district: it starts on the street, climbs a stair and lift core at one pylon, runs along the deck's arms past each use (health, culture, green areas, housing) and comes back down another core. The cores at every pylon show how each part of the Raumpark connects to the street below.",
-      "camera": "Same isometric view, the route draws itself with a moving point",
-      "graphics": "Route line · stair cores · use nodes",
-      "data": "Access points, stairs / lifts and main routes (from the research team)",
-      "transition": "Cut to diagram"
-    },
-    {
-      "code": "S12",
-      "tier": "core",
       "sketch": "solar",
       "title": "Greenery & solar income",
       "kicker": "Diagram · heat map on the deck",
-      "duration": 10,
+      "duration": 15,
       "scale": [
         "district"
       ],
       "idea": "A diagram over the whole deck: a heat map of how much sun each part receives over the year, with the use volumes casting their shade. From it follows where planting thrives, where shade-loving planting belongs, and where PV pays off, with the share of each shown as bars.",
       "camera": "Top-down / isometric diagram, heat map sweeps in",
-      "graphics": "Solar heat map · legend · share bars · PV",
+      "graphics": "Solar heat map · legend · share bars · PV · PV on the sloped, sun-facing sides of the volumes",
       "data": "Yearly sun on the deck (calculated) · planting and PV assumptions"
     }
   ]
