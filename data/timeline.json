@@ -72,37 +72,37 @@
           "tone": "park"
         },
         {
-          "label": "S5 Westbahnhof sun & shade (summer / winter)",
+          "label": "S5 Green space, housing & density",
           "start": "2026-11-30",
           "end": "2026-12-04",
+          "tone": "park"
+        },
+        {
+          "label": "S6 Westbahnhof sun & shade (summer / winter)",
+          "start": "2026-12-07",
+          "end": "2026-12-11",
           "tone": "sun"
         },
         {
-          "label": "S6 Westbahnhof heat: without / with",
+          "label": "S7 Westbahnhof heat: without / with",
           "start": "2026-12-07",
           "end": "2026-12-11",
           "tone": "heat"
         },
         {
-          "label": "S10 Green space, housing & density",
-          "start": "2026-12-07",
-          "end": "2026-12-11",
-          "tone": "park"
-        },
-        {
-          "label": "S7 Window & model split screen",
+          "label": "S8 Window & model split screen",
           "start": "2026-12-14",
           "end": "2026-12-18",
           "tone": "sun"
         },
         {
-          "label": "S8 Quality of sunlight & wind",
+          "label": "S9 Quality of sunlight & wind",
           "start": "2026-12-14",
           "end": "2026-12-18",
           "tone": "sun"
         },
         {
-          "label": "S9 Greenery & solar income",
+          "label": "S10 Greenery & solar income",
           "start": "2027-01-04",
           "end": "2027-01-08",
           "tone": "sun"

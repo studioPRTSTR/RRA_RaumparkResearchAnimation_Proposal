@@ -256,7 +256,8 @@ function districtBase(P, { deck = true, mark = null, context = true } = {}) {
     const [mx, my] = P(x, y, z);
     city += `<circle class="sb-mark" cx="${f(mx)}" cy="${f(my)}" r="3.2"/><circle class="sb-mark-ring" cx="${f(mx)}" cy="${f(my)}" r="6"/>`;
   }
-  return { ground, city, deck: deck ? deckSlab(P) : '' };
+  // the Raumpark: the deck and the volumes on it
+  return { ground, city, deck: deck ? deckSlab(P) + useBoxes(P, 'all') : '' };
 }
 
 /* North points to the top left of the isometric frames (the grid's +y axis), so the camera
@@ -279,21 +280,27 @@ function northArrow(P, x, y, r = 16) {
   return `<g class="sb-north"><polygon points="${ring.join(' ')}"/><path d="M${f(cx)} ${f(cy)} L${f(nx)} ${f(ny)}"/></g>`;
 }
 
-/** Sun samples for one key date, every 30 min while the sun is clearly up (real Vienna sun positions). */
-function sunSamples(dateId = 'jun') {
+/** Sun samples for one key date, every `step` min while the sun is clearly up (real Vienna sun positions). */
+function sunSamples(dateId = 'jun', from = 4 * 60, to = 21 * 60, step = 30) {
   const date = CONFIG.sun.dates.find((d) => d.id === dateId);
   const out = [];
-  for (let m = 4 * 60; m <= 21 * 60; m += 30) {
+  for (let m = from; m <= to; m += step) {
     const p = sunPosition(date.day, m, date.tz, CONFIG.site.latitude, CONFIG.site.longitude);
     if (p.altitude > 4 * Math.PI / 180) out.push({ m, ...p, v: sunVector(p.altitude, p.azimuth + GRID_TURN) });
   }
   return out;
 }
 
-/** Animated sun on its arc + the deck's shadow sweeping the ground, in sync (21 June by default). */
-function sunLayer(P, dur, idp, dateId = 'jun', hours = true) {
+/**
+ * Animated sun on its arc + the deck's shadow sweeping the ground, in sync (21 June by default),
+ * the whole day on a loop. With span { from, to, begin } (minutes of the day, seconds into the
+ * sketch) only that stretch of the arc is drawn, and the sun runs along it once from `begin`.
+ */
+function sunLayer(P, dur, idp, dateId = 'jun', hours = true, span = null) {
   // with north top left the camera looks along the arc's plane; its height is drawn 1.5× (schematic) so the day opens up
-  const D = DISTRICT, S = sunSamples(dateId), R = 130, ZK = 1.5, [cx, cy] = D.center;
+  const D = DISTRICT, R = 130, ZK = 1.5, [cx, cy] = D.center;
+  const S = span ? sunSamples(dateId, span.from, span.to, 5) : sunSamples(dateId);
+  const timing = span ? `begin="${span.begin}s" fill="freeze"` : 'repeatCount="indefinite"';
   const sunPts = S.map((s) => P(cx + s.v[0] * R, cy + s.v[1] * R, s.v[2] * R * ZK));
   const shadowPolys = S.map((s) => {
     // The deck outline pushed away from the sun onto the ground (length capped for low sun).
@@ -304,13 +311,13 @@ function sunLayer(P, dur, idp, dateId = 'jun', hours = true) {
   // full day arc (dashed), hour dots
   const arc = [];
   const date = CONFIG.sun.dates.find((d) => d.id === dateId);
-  for (let m = 4 * 60; m <= 21 * 60; m += 15) {
+  for (let m = span ? span.from : 4 * 60; m <= (span ? span.to : 21 * 60); m += span ? 5 : 15) {
     const p = sunPosition(date.day, m, date.tz, CONFIG.site.latitude, CONFIG.site.longitude);
     if (p.altitude <= 0) continue;
     const v = sunVector(p.altitude, p.azimuth + GRID_TURN);
     arc.push(P(cx + v[0] * R, cy + v[1] * R, v[2] * R * ZK).map(f).join(','));
   }
-  const ticks = sunPts.map(([x, y]) => `<circle class="sb-tick" cx="${f(x)}" cy="${f(y)}" r="1.2"/>`).join('');
+  const ticks = span ? '' : sunPts.map(([x, y]) => `<circle class="sb-tick" cx="${f(x)}" cy="${f(y)}" r="1.2"/>`).join('');
   // the time of day along the arc, every two hours (local clock time); noon first, then outwards
   let times = '';
   const placed = [];
@@ -325,10 +332,10 @@ function sunLayer(P, dur, idp, dateId = 'jun', hours = true) {
   }
   const kt = S.map((_, i) => (i / (S.length - 1)).toFixed(3)).join(';');
   const shadow = `<path class="sb-shadow" fill-rule="evenodd" d="${shadowPolys[0]}">
-      <animate id="${idp}-a" attributeName="d" dur="${dur}s" repeatCount="indefinite" keyTimes="${kt}" values="${shadowPolys.join(';')}"/></path>`;
+      <animate id="${idp}-a" attributeName="d" dur="${dur}s" ${timing} keyTimes="${kt}" values="${shadowPolys.join(';')}"/></path>`;
   const arcSvg = `<polyline class="sb-arc" points="${arc.join(' ')}"/>${ticks}${times}`;
   const disc = `<g class="sb-sun"><circle r="7" class="sb-sun-halo"/><circle r="4"/>
-      <animateMotion dur="${dur}s" repeatCount="indefinite" keyTimes="${kt}" keyPoints="${kt}" calcMode="linear"
+      <animateMotion dur="${dur}s" ${timing} keyTimes="${kt}" keyPoints="${kt}" calcMode="linear"
         path="M${sunPts.map(([x, y]) => `${f(x)},${f(y)}`).join(' L')}"/></g>`;
   return { shadow, sun: arcSvg + disc, arc: arcSvg, disc };
 }
@@ -822,7 +829,39 @@ function sunHoursMaps() {
   }
   const day = { low: image(low), up: image(up, onDeck) };
   const hall = { ...D.hall, z0: 0, block: true, loops: rectsToOutline([[D.hall.x0, D.hall.y0, D.hall.x1, D.hall.y1]], 1) };
-  hoursCache = { W, H, RES, x0: g.x0, y0: g.y0, day, pieces: [...D.blocks, hall] };
+  const pieces = [...D.blocks, hall];
+
+  // facades and the Raumpark's volumes: the share of the day's sun (of 11 h) at a point, rays
+  // against the solids (by their bounding boxes); a wall only counts the sun in front of it
+  const suns = [];
+  for (let m = 5 * 60; m <= 20 * 60; m += STEP) { const sv = sunAt(m); if (sv) suns.push(sv); }
+  const share = (p, n, skip) => suns.reduce((h, sv) => h
+    + ((!n || n[0] * sv[0] + n[1] * sv[1] > 0) && !solids.some((b) => b !== skip && rayBox(p, sv, b)) ? STEP / 60 : 0), 0) / 11;
+  const out = (a, b, n, z) => [(a[0] + b[0]) / 2 + n[0] * 0.4, (a[1] + b[1]) / 2 + n[1] * 0.4, z];
+  // the city's walls: at the street (1 m) and under the eaves
+  const walls = pieces.map((pc) => frontFaces(pc.loops, 0, pc.z1).map((fc) =>
+    [share(out(fc.a, fc.b, fc.n, 1), fc.n), share(out(fc.a, fc.b, fc.n, pc.z1 - 1), fc.n)]));
+  // the Raumpark's volumes: each side low and high, and the roof as the mean of a few points on it
+  const inPoly = (poly, x, y) => {
+    let c = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const [xi, yi] = poly[i], [xj, yj] = poly[j];
+      if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c;
+    }
+    return c;
+  };
+  const volumes = ALL_USE_BOXES.map((b) => {
+    const sides = b.poly.map((a, i) => {
+      const c = b.poly[(i + 1) % b.poly.length], l = Math.hypot(c[0] - a[0], c[1] - a[1]);
+      const n = [(c[1] - a[1]) / l, -(c[0] - a[0]) / l];
+      return [share(out(a, c, n, b.z0 + 0.8), n, b), share(out(a, c, n, b.z1 - 0.8), n, b)];
+    });
+    const pts = [];
+    for (let x = b.x0 + 3; x < b.x1; x += 8) for (let y = b.y0 + 3; y < b.y1; y += 8) if (inPoly(b.poly, x, y)) pts.push([x, y, b.z1 + 0.2]);
+    const top = pts.length ? pts.reduce((s, p) => s + share(p, null, b), 0) / pts.length : 1;
+    return { sides, top };
+  });
+  hoursCache = { W, H, RES, x0: g.x0, y0: g.y0, day, pieces, walls, volumes };
   return hoursCache;
 }
 
@@ -882,7 +921,6 @@ const SKETCHES = {
       <path class="sb-city" d="${path(V.outline, true)}"/>
       ${V.danube.map((l) => `<path class="sb-river" d="${path(l)}"/>`).join('')}
       ${V.canal.map((l) => `<path class="sb-canal" d="${path(l)}"/>`).join('')}
-      <circle class="sb-line" cx="${f(cx)}" cy="${f(cy)}" r="${f(0.9 * S)}"/>
       <g class="sb-zoom">
         <rect x="${f(WB[0] - 16)}" y="${f(WB[1] - 10)}" width="32" height="20"/>
       </g>
@@ -904,6 +942,19 @@ const SKETCHES = {
       .sort((p, q) => (q.x0 + q.x1 + q.y0 + q.y1) - (p.x0 + p.x1 + p.y0 + p.y1))
       .map((b) => drawPiece(P, b, b.ctx ? ' db-ctx' : ''))
       .join('');
+    // their shadows on the ground in the afternoon sun (from the south-east): every wall pushed
+    // away from the sun, one path for the district and one for the surroundings (which fade with
+    // their buildings)
+    const K = [-0.95, 0.55];                                       // shadow offset per metre of height
+    const shade = (list) => list.map((b) => {
+      const loops = b.loops ?? [[[b.x0, b.y0], [b.x1, b.y0], [b.x1, b.y1], [b.x0, b.y1]]];
+      return loops.map((l) => l.map(([ax, ay], i) => {
+        const [bx, by] = l[(i + 1) % l.length], h = b.z1;
+        return dPath([P(ax, ay, 0), P(bx, by, 0), P(bx + K[0] * h, by + K[1] * h, 0), P(ax + K[0] * h, ay + K[1] * h, 0)]);
+      }).join('')).join('');
+    }).join('');
+    const shadows = `<path class="db-shadow" d="${shade([...D.blocks, D.hall])}"/>
+      <path class="db-shadow db-ctx" d="${shade(D.contextBlocks)}"/>`;
     // placeholder for the text about the district, in the free corner once the city has faded:
     // a heading bar and a few lines that draw in one after the other
     const dur = `dur="${shot}s" fill="freeze"`, at = (k) => 0.26 + k * 0.025;
@@ -915,14 +966,16 @@ const SKETCHES = {
     return `
       <rect class="sb-bg" width="320" height="180"/>
       ${groundSvg(P, { context: false, edge: false })}
+      ${shadows}
       ${buildings}${text}`;
   },
 
   /* S3 — Raumpark: city design is climate design. Urban expansion and densification as populated
      green space above, and interlinked with, the existing city. Some blocks of the existing city
-     take the colours of the uses; the pylons rise and the deck spreads out
-     along the streets; then the coloured blocks' volumes are duplicated, lift off and deform into
-     the volumes on the deck: what the city has, taken up one level and reshaped to fit. */
+     take the colours of the uses and their volumes are extracted first: duplicated, they lift off
+     and hover above the city. Then the Raumpark is built under them: the pylons rise and the deck
+     spreads out along the streets. Last the volumes come down and deform into the volumes on the
+     deck: what the city has, taken up one level and reshaped to fit. */
   'raumpark-rise'(id, shot = 15) {
     const sc = 0.39, P = isoP(160, 139, sc), D = DISTRICT, dk = D.deck;
     const dur = `dur="${shot}s" fill="freeze"`;
@@ -937,7 +990,7 @@ const SKETCHES = {
     };
     const mid = (b) => [(b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2];
 
-    // 1 · some blocks of the existing city take the colours of the uses (0.06 → 0.2):
+    // 1 · some blocks of the existing city take the colours of the uses (0.03 → 0.12):
     // per use one block, picked from the blocks near that use's part of the deck
     const taken = new Set();
     const sources = USE_ORDER.map((use, n) => {
@@ -945,54 +998,55 @@ const SKETCHES = {
       const blk = D.blocks.filter((q) => !taken.has(q))
         .sort((p, q) => Math.hypot(...mid(p).map((v, k) => v - c[k])) - Math.hypot(...mid(q).map((v, k) => v - c[k])))[n % 2];
       taken.add(blk);
-      return { use, blk, a: 0.06 + n * 0.035 };
+      return { use, blk, a: 0.03 + n * 0.02 };
     });
-    const tinted = sources.map((sr) => `<g opacity="0">${fade(sr.a, sr.a + 0.04)}${prism(P, sr.blk.loops, 0, sr.blk.z1, `use-box use-${sr.use} is-focus rp-src`)}</g>`).join('');
+    const tinted = sources.map((sr) => `<g opacity="0">${fade(sr.a, sr.a + 0.03)}${prism(P, sr.blk.loops, 0, sr.blk.z1, `use-box use-${sr.use} is-focus rp-src`)}</g>`).join('');
 
-    // 2 · the structure (0.2 → 0.46): the pylons rise, the deck spreads out
+    // 3 · the structure under the hovering volumes (0.32 → 0.52): the pylons rise, the deck spreads out
     const pylons = D.pylons.slice().sort(byDepth).map((b, i) => {
-      const [x, y] = mid(b), a = 0.2 + i * 0.02;
+      const [x, y] = mid(b), a = 0.32 + i * 0.015;
       return grow([x, y, 0], box(P, b, 'sb-pylon'), a, 0.07);
     }).join('');
     const near = (r) => Math.min(...D.pylons.map((q) => Math.hypot((r[0] + r[2]) / 2 - mid(q)[0], (r[1] + r[3]) / 2 - mid(q)[1])));
     const pieces = dk.rects.map((r) => ({ r, d: near(r) }));
     const dmax = Math.max(...pieces.map((q) => q.d)) || 1;
     const deckParts = pieces.sort((p, q) => p.d - q.d).map(({ r, d }) => {
-      const a = 0.3 + (d / dmax) * 0.12;
+      const a = 0.38 + (d / dmax) * 0.1;
       return `<g opacity="0">${fade(a, a + 0.03)}${slab(P, rectsToOutline([r]), dk.z0, dk.z1, 'sb-deck')}</g>`;
     }).join('');
-    const deck = `<g opacity="0">${fade(0.44, 0.46)}${deckSlab(P)}</g>`;
+    const deck = `<g opacity="0">${fade(0.5, 0.52)}${deckSlab(P)}</g>`;
 
-    // 3 · the coloured blocks' volumes are duplicated, lift off and deform into the deck's volumes
-    // (0.48 → 0.86): from a wing of the block, up above the deck, into its place and shape there
+    // 2 · the coloured blocks' volumes are duplicated and lift off (a1 → a1 + 0.1, from 0.1), hover
+    // while the structure is built, then 4 · come down and deform into the deck's volumes
+    // (a2 → a2 + 0.1, from 0.56): from the block, up above the deck, into its place and shape there
     const moves = sources.map((sr, n) => {
       const u = USES[sr.use].items[0], w = sr.blk, lift = 16;
       // the block as a box with the volume's corners (same order), so it can deform into it
       const b = rectLike(w, u.poly);
       return {
-        u, a: 0.48 + n * 0.08,
+        u, a1: 0.1 + n * 0.035, a2: 0.56 + n * 0.06,
         from: frustum(P, b, b, 0, w.z1),
         up: frustum(P, b, b, dk.z1 + lift, dk.z1 + lift + w.z1),
         to: frustum(P, u.poly, u.top, u.z0, u.z1),
       };
     }).sort((p, q) => byDepth(p.u, q.u));
-    // each duplicate is drawn twice: below the deck while it rises through it, above it after that
+    // each duplicate is drawn twice: among the city while it rises out of it, above the deck after that
     const dupe = (m, show) => {
       const { from: fa, up: fu, to: ft } = m;
-      const kt = `0;${f2(m.a)};${f2(m.a + 0.1)};${f2(m.a + 0.2)};1`;
-      const morph = (get) => `<animate attributeName="d" ${dur} calcMode="spline" values="${get(fa)};${get(fa)};${get(fu)};${get(ft)};${get(ft)}"
-        keyTimes="${kt}" keySplines="0 0 1 1;.45 0 .3 1;.45 0 .3 1;0 0 1 1"/>`;
+      const kt = `0;${f2(m.a1)};${f2(m.a1 + 0.1)};${f2(m.a2)};${f2(m.a2 + 0.1)};1`;
+      const morph = (get) => `<animate attributeName="d" ${dur} calcMode="spline" values="${get(fa)};${get(fa)};${get(fu)};${get(fu)};${get(ft)};${get(ft)}"
+        keyTimes="${kt}" keySplines="0 0 1 1;.45 0 .3 1;0 0 1 1;.45 0 .3 1;0 0 1 1"/>`;
       // the faces in the order of the finished volume: the hidden ones first
       const sides = ft.order.map((i) => `<path class="f-s k-sil" d="${fa.sides[i]}">${morph((F) => F.sides[i])}</path>`).join('');
       return `<g class="use-box use-${m.u.use} is-focus" opacity="0">${show}${sides}
         <path class="f-t k-sil" d="${fa.top}">${morph((F) => F.top)}</path></g>`;
     };
     const vis = (a, b) => `<animate attributeName="opacity" ${dur} values="0;0;1;1;0;0" keyTimes="0;${f2(a)};${f2(a + 0.005)};${f2(b)};${f2(b + 0.005)};1"/>`;
-    const dupesBelow = moves.map((m) => dupe(m, vis(m.a, m.a + 0.07))).join('');
-    const dupesAbove = moves.map((m) => dupe(m, fade(m.a + 0.07, m.a + 0.075))).join('');
+    const dupesBelow = moves.map((m) => dupe(m, vis(m.a1, m.a1 + 0.07))).join('');
+    const dupesAbove = moves.map((m) => dupe(m, fade(m.a1 + 0.07, m.a1 + 0.075))).join('');
     // once a use's base has formed it takes on its storeys, and its upper levels drop onto it one
     // after the other
-    const levels = moves.flatMap((m) => USES[m.u.use].items.map((b, k) => ({ b, k, a: m.a + 0.2 + Math.max(0, k - 1) * 0.025 })))
+    const levels = moves.flatMap((m) => USES[m.u.use].items.map((b, k) => ({ b, k, a: m.a2 + 0.1 + Math.max(0, k - 1) * 0.025 })))
       .sort((p, q) => byStack(p.b, q.b))
       .map(({ b, k, a }) => `<g opacity="0">${fade(a, a + 0.02)}<g>${k ? `<animateTransform attributeName="transform" type="translate" ${dur} calcMode="spline"
         values="0 ${f(-5 * sc)};0 ${f(-5 * sc)};0 0;0 0" keyTimes="0;${f2(a)};${f2(a + 0.03)};1" keySplines="0 0 1 1;.3 0 .2 1;0 0 1 1"/>` : ''}
@@ -1140,8 +1194,20 @@ const SKETCHES = {
         values="${d(0)};${d(0)};${d(LIFT[1])};${d(LIFT[1])};${d(0)};${d(0)}" keyTimes="${kt(1)}" keySplines="${SPL}"/></path>`;
     }).join('');
     const pylons = D.pylons.slice().sort(byDepth).map((b) => box(P, b, 'sb-pylon')).join('');
+    // a text block top left describing the part in colour (placeholder: swatch, heading, lines),
+    // one per phase, with the same timing as the CSS accents
+    const phases = [['ly-sw--uses', 0.36, 0.49, [62, 70, 54]], ['ly-sw--struct', 0.49, 0.62, [58, 66, 40]], ['ly-sw--deck', 0.62, 0.75, [64, 52, 60]]];
+    const notes = phases.map(([sw, a, b, ws]) => `<g opacity="0">
+        <animate attributeName="opacity" dur="${shot}s" fill="freeze" values="0;0;1;1;0;0" keyTimes="0;${f2(a)};${f2(a + 0.015)};${f2(b - 0.015)};${f2(b)};1"/>
+        ${sw === 'ly-sw--uses'
+          ? USE_ORDER.map((u, i) => `<rect class="use-${u} use-swatch" x="${18 + i * 3.4}" y="17" width="2.6" height="5"/>`).join('')
+          : `<rect class="ly-sw ${sw}" x="18" y="17" width="5" height="5"/>`}
+        <rect class="db-ph__line db-ph__head" x="${sw === 'ly-sw--uses' ? 34 : 27}" y="18.3" width="40" height="2.6"/>
+        ${ws.map((w, i) => `<rect class="db-ph__line" x="18" y="${29 + i * 6}" width="${w}" height="1.6"/>`).join('')}
+      </g>`).join('');
     return `
       <rect class="sb-bg" width="320" height="180"/>
+      ${notes}
       <g class="ly-city">${groundSvg(P, { context: false })}${drawCity(P)}</g>
       <g class="ly-struct">${drops}</g>
       <g>${lift(1)}<g class="ly-struct">${pylons}</g></g>
@@ -1150,10 +1216,12 @@ const SKETCHES = {
   },
 
   /* S7 — overview → the Raumpark turns transparent → push-in on one window → the view out of
-     that window fills the frame, with the isometric sun study as a synced inset bottom right */
+     that window fills the frame, with the isometric sun study as a synced inset bottom right:
+     one hour of the afternoon (21 June, 14–15 h), played once over the window view */
   split(id, shot = 20) {
-    const dur = shot / 2;    // sun cycle: two per shot, the second one on the window view
     const T = shot;          // the whole sequence, once per shot
+    const begin = 0.5 * shot, dur = shot - begin;                 // the window view and its one hour
+    const once = `dur="${dur}s" begin="${begin}s" fill="freeze"`;
     const loop = `dur="${T}s" fill="freeze"`;
     // ---- steps 1–3: overview, deck fades, push-in on the window
     const PA = isoP(160, 139, 0.39);
@@ -1210,7 +1278,7 @@ const SKETCHES = {
         `<rect x="${85 + c * 19}" y="${76 + r * 17}" width="7" height="11"/>`).join('')).join('')}</g>
       <rect class="sb-pylon-flat" x="132" y="${W.y0 + 20}" width="11" height="${W.y1 - W.y0 - 20}"/>
       <rect class="sb-passing" x="${W.x0}" y="32" width="60" height="112" clip-path="url(#${id}-win)">
-        <animate attributeName="x" dur="${dur}s" repeatCount="indefinite" values="20;80;130;170" keyTimes="0;0.35;0.65;1"/>
+        <animate attributeName="x" ${once} values="40;110"/>
       </rect>
       <rect class="sb-glass" x="${W.x0}" y="${W.y0}" width="${W.x1 - W.x0}" height="${W.tr - W.y0}"/>
       <rect class="sb-glass" x="${W.x0}" y="${W.tr}" width="${W.mid - W.x0}" height="${W.y1 - W.tr}"/>
@@ -1219,7 +1287,7 @@ const SKETCHES = {
       <rect class="sb-sill" x="${W.x0 - 6}" y="${W.y1}" width="${W.x1 - W.x0 + 12}" height="3"/>
       <rect class="sb-floor" x="0" y="150" width="320" height="30"/>
       <polygon class="sb-patch" points="${patch[0]}">
-        <animate attributeName="points" dur="${dur}s" repeatCount="indefinite" values="${patch.join(';')};${patch[0]}" keyTimes="0;0.45;0.9;1"/>
+        <animate attributeName="points" ${once} values="${patch[0]};${patch[1]}"/>
       </polygon>
       <g class="sb-sash">
         <polygon class="sb-glass" points="${W.x1},${W.tr} 182,${W.tr - 8} 182,${W.y1 + 10} ${W.x1},${W.y1}"/>
@@ -1233,7 +1301,7 @@ const SKETCHES = {
     // inset: small isometric with the same sun timing and the window marked
     const P = isoP(254, 153, 0.16);
     const rbase = districtBase(P, { mark: WIN, context: false });
-    const { shadow, sun } = sunLayer(P, dur, id, 'jun', false);
+    const { shadow, sun } = sunLayer(P, dur, id, 'jun', false, { from: 14 * 60, to: 15 * 60, begin });
     const inset = `
       ${rbase.ground}${shadow}${rbase.city}${rbase.deck}${sun}
 `;
@@ -1270,18 +1338,40 @@ const SKETCHES = {
       `<clipPath id="${id}-plate"><path clip-rule="evenodd" d="${loopsPath(P, D.plate.loops, 0)}"/></clipPath>`,
       `<clipPath id="${id}-deck"><path clip-rule="evenodd" d="${loopsPath(P, dk.loops, dk.z1)}"/></clipPath>`,
       `<linearGradient id="${id}-lg">${HOURS.map(([t, c]) => `<stop offset="${t}" stop-color="rgb(${c.join(',')})"/>`).join('')}</linearGradient>`];
-    // the city: each block's walls, then its roof in the sun-hours raster (far → near)
+    // a wall in the sun-hours scale: a gradient from its value at the bottom to the one at the top
+    const hc = (v) => `rgb(${hoursColour(v).join(',')})`;
+    const wall = (gid, a, b, z0, z1, [vb, vt]) => {
+      const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, [x1, y1] = P(mx, my, z0), [x2, y2] = P(mx, my, z1);
+      defs.push(`<linearGradient id="${gid}" gradientUnits="userSpaceOnUse" x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}"><stop offset="0" stop-color="${hc(vb)}"/><stop offset="1" stop-color="${hc(vt)}"/></linearGradient>`);
+      return `<path class="hm-edge" fill="url(#${gid})" d="${dPath([[...a, z0], [...b, z0], [...b, z1], [...a, z1]].map((q) => P(...q)))}"/>`;
+    };
+    // the city: each block's walls in the sun-hours scale, then its roof in the raster (far → near)
     const city = SH.pieces.map((pc, i) => ({ ...pc, i })).concat(D.pylons)
       .sort((a, b) => (b.x0 + b.x1 + b.y0 + b.y1) - (a.x0 + a.x1 + a.y0 + a.y1))
       .map((pc) => {
         if (pc.pylon) return box(P, pc, 'sb-pylon');
         const roof = loopsPath(P, pc.loops, pc.z1);
         defs.push(`<clipPath id="${id}-r${pc.i}"><path clip-rule="evenodd" d="${roof}"/></clipPath>`);
-        return `${prism(P, pc.loops, 0, pc.z1, pc.hall ? 'sb-hall' : 'sb-block')}
+        const walls = frontFaces(pc.loops, 0, pc.z1).map((fc, j) => wall(`${id}-w${pc.i}-${j}`, fc.a, fc.b, 0, pc.z1, SH.walls[pc.i][j])).join('');
+        return `${walls}
           <g clip-path="url(#${id}-r${pc.i})"><use href="#${id}-low" transform="translate(0 ${f(-pc.z1 * sc)})"/></g>
           <path class="hm-edge hm-roof" fill-rule="evenodd" d="${roof}"/>`;
       }).join('');
-    const solids = ALL_USE_BOXES.slice().sort(byStack).map((b) => useVolume(P, b, `use-box use-${b.use} is-focus`)).join('');
+    // the Raumpark's volumes in the same scale (not in their use colours): walls by gradient, roofs
+    // flat, with their storeys
+    const solids = ALL_USE_BOXES.map((b, i) => ({ b, v: SH.volumes[i], i })).sort((p, q) => byStack(p.b, q.b)).map(({ b, v, i }) => {
+      const F = frustum(P, b.poly, b.top, b.z0, b.z1);
+      const sides = F.order.map((k) => {
+        const svg = wall(`${id}-v${i}-${k}`, b.poly[k], b.poly[(k + 1) % b.poly.length], b.z0, b.z1, v.sides[k]);
+        return F.front.includes(k) ? svg.replace('class="hm-edge"', 'class="hm-edge k-sil"') : svg;
+      }).join('');
+      let floors = '';
+      for (const k of F.front) {
+        const [ax, ay] = b.poly[k], [bx, by] = b.poly[(k + 1) % b.poly.length];
+        for (let z = b.z0 + FLOOR; z < b.z1 - 0.5; z += FLOOR) { const [p, q] = [P(ax, ay, z), P(bx, by, z)]; floors += `M${f(p[0])} ${f(p[1])}L${f(q[0])} ${f(q[1])}`; }
+      }
+      return `<g class="sh-vol">${sides}<path class="k-fl" d="${floors}"/><path class="k-sil" fill="${hc(v.top)}" d="${F.top}"/></g>`;
+    }).join('');
 
     // ---- wind, from W0 of the shot on: streamlines in 3 m steps, west → east
     const W0 = 0.4, W1 = 0.46, step = 3;

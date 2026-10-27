@@ -467,6 +467,7 @@ html.sb-fs-lock { overflow: hidden; }
 /* S4: while the stack is open, one part at a time in colour, the rest grey and faded back:
    uses 36–49 %, structure 49–62 %, deck 62–75 % of the shot; all in colour again as it closes */
 .ly-struct .sb-pylon .f-s, .ly-struct .sb-pylon .f-t { fill: color-mix(in srgb, #3f78c8 70%, var(--paper)); }
+.ly-sw--uses { fill: var(--use-res); } .ly-sw--struct { fill: color-mix(in srgb, #3f78c8 70%, var(--paper)); } .ly-sw--deck { fill: var(--park); }
 .ly-struct .ly-drop { stroke: color-mix(in srgb, #3f78c8 80%, var(--paper)); }
 .ly-city, .ly-struct, .ly-deck, .ly-uses { animation: var(--shot, 15s) linear both; }
 .ly-city { animation-name: ly-city; }
@@ -481,6 +482,7 @@ html.sb-fs-lock { overflow: hidden; }
 /* S2: the surrounding buildings vanish into the background after a moment (timed to the shot via --shot) */
 .db-ctx path { animation: db-grey var(--shot, 15s) ease-in both; }
 .db-ctx { animation: db-fade var(--shot, 15s) ease-in both; }
+.db-shadow { fill: var(--shadow); fill-opacity: 0.55; }
 @keyframes db-grey { 0%, 15% { fill: var(--bldg); stroke-opacity: 1; } 25%, 100% { fill: var(--paper); stroke-opacity: 0; } }
 @keyframes db-fade { 0%, 15% { opacity: 1; } 25%, 100% { opacity: 0; } }
 /* S2: placeholder for the text block (heading bar, lines) */

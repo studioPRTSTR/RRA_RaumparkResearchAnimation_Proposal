@@ -33,9 +33,9 @@
       "scale": [
         "district"
       ],
-      "idea": "A wider view of the area around Westbahnhof: every building stands alike, the district and its surroundings. Then the buildings around it fade back, and the district used in all the following shots stands out. The place and its current state, before anything is added.",
+      "idea": "A wider view of the area around Westbahnhof: every building stands alike, the district and its surroundings, each casting its shadow in the afternoon sun. Then the buildings around it fade back, and the district used in all the following shots stands out. The place and its current state, before anything is added.",
       "camera": "Fixed isometric, wider than the following shots; the surroundings fade back",
-      "graphics": "Surroundings faded back · district in full",
+      "graphics": "Building shadows · surroundings faded back · district in full · text placeholder",
       "data": "District boundary and today's building stock of the wider area (3D model)",
       "transition": "Same camera, the sun"
     },
@@ -49,9 +49,9 @@
       "scale": [
         "district"
       ],
-      "idea": "City design is also climate design, and vice versa. RAUMPARK stands for a new typology of cities in the era of the New Climatic Regime: urban expansions and densifications in the form of populated green spaces and forests above, and interlinked with, the existing city. The shot shows it with the city's own material: some blocks of the existing city take the colours of the uses (culture, health & wellbeing, residential, green areas). The pylons rise from the street crossings and the deck spreads out along the streets. Then the coloured blocks' volumes are duplicated, lift off and deform into the volumes on the deck, mostly running in one direction: what the city has, taken up one level and reshaped to fit.",
+      "idea": "City design is also climate design, and vice versa. RAUMPARK stands for a new typology of cities in the era of the New Climatic Regime: urban expansions and densifications in the form of populated green spaces and forests above, and interlinked with, the existing city. The shot shows it with the city's own material: some blocks of the existing city take the colours of the uses (culture, health & wellbeing, residential, green areas). First their volumes are extracted: duplicated, they lift off and hover above the city. Then the Raumpark is built beneath them: the pylons rise from the street crossings and the deck spreads out along the streets. Last the volumes come down and deform into the stacked volumes on the deck, storey by storey: what the city has, taken up one level and reshaped to fit.",
       "camera": "Fixed isometric, the view of the following shots; the Raumpark grows out of the district",
-      "graphics": "Blocks in use colours · pylons · deck · duplicated volumes morphing onto the deck",
+      "graphics": "Blocks in use colours · volumes extracted and hovering · pylons · deck · volumes settling and deforming onto the deck",
       "data": "Raumpark concept: pylon positions, deck outline, programme (from the research team)",
       "transition": "Same camera, the model comes apart"
     },
@@ -65,14 +65,30 @@
       "scale": [
         "district"
       ],
-      "idea": "Straight after the Raumpark has grown, the same model comes apart into its layers: the existing city stays on the ground, then the pylons over the street crossings, the deck that branches along the streets and the use solids on top lift away one after the other, thin lines marking where the pylons land. While the stack is open, one part at a time is shown in colour and everything else turns grey: first the uses, then the structure (pylons), then the deck. Then the stack closes again, so the viewer knows what the Raumpark is made of before the studies of sun, heat and wind.",
+      "idea": "Straight after the Raumpark has grown, the same model comes apart into its layers: the existing city stays on the ground, then the pylons over the street crossings, the deck that branches along the streets and the use solids on top lift away one after the other, thin lines marking where the pylons land. While the stack is open, one part at a time is shown in colour and everything else turns grey: first the uses, then the structure (pylons), then the deck, each with a short text block top left that describes it. Then the stack closes again, so the viewer knows what the Raumpark is made of before the studies of sun, heat and wind.",
       "camera": "Isometric, the stack opens at one layer after the other",
-      "graphics": "Exploded layers · lines where the pylons land · one layer in colour at a time, the rest grey",
+      "graphics": "Exploded layers · lines where the pylons land · one layer in colour at a time, the rest grey · text block per part (placeholder)",
       "data": "3D model of the district, split into layers",
-      "transition": "Same camera, the sun"
+      "transition": "Same camera, the model turns grey"
     },
     {
       "code": "S5",
+      "tier": "core",
+      "sketch": "green-living",
+      "title": "Green space, housing & density",
+      "kicker": "Isometric · one quantity at a time, then the density",
+      "duration": 20,
+      "scale": [
+        "district"
+      ],
+      "idea": "What the Raumpark adds, in figures. The whole model turns grey and one quantity at a time is shown in colour, with its figure top right: first the green space the district has today (its parks), then the Raumpark's green added to it (the planted deck and the green volume), so the bar for green space grows; then the residential floors, storey by storey, in the existing blocks and in the Raumpark's housing. Last the density: the existing city turns neutral and the whole Raumpark lights up in one accent, while a graph shows the floor area of the district today and with the Raumpark stacked on top, with the increase in per cent.",
+      "camera": "Same isometric view, still",
+      "graphics": "Grey model · parks, then Raumpark green, then housing with storey lines in colour · figures as label + bar (placeholders) · density: city neutral, Raumpark in accent, bar graph today / with Raumpark, + %",
+      "data": "Green space today and with the Raumpark, residential floor area, population, gross floor area of the district today and with the Raumpark (from the research team; the sketch computes it from the schematic model)",
+      "transition": "Same camera, the sun"
+    },
+    {
+      "code": "S6",
       "tier": "core",
       "sketch": "sun",
       "title": "Westbahnhof: sun & shade, summer and winter",
@@ -88,7 +104,7 @@
       "transition": "Same camera, heat"
     },
     {
-      "code": "S6",
+      "code": "S7",
       "tier": "core",
       "sketch": "district-heat",
       "title": "Westbahnhof: heat without / with",
@@ -104,7 +120,7 @@
       "transition": "Push in to one window"
     },
     {
-      "code": "S7",
+      "code": "S8",
       "tier": "core",
       "sketch": "split",
       "title": "Window & model, side by side",
@@ -114,14 +130,14 @@
         "district",
         "room"
       ],
-      "idea": "Starts on the overview of the district with the Raumpark. The deck turns transparent and the camera pushes in on one window of a Gründerzeit house below it. Then the view out of that window fills the screen, with light and shade moving through the room over the day, while a small isometric sun study in the corner shows the same moment with the window marked. Both run in sync, so the abstract model meets everyday experience.",
+      "idea": "Starts on the overview of the district with the Raumpark. The deck turns transparent and the camera pushes in on one window of a Gründerzeit house below it. Then the view out of that window fills the screen, with light and shade moving through the room, while a small isometric sun study in the corner shows the same moment with the window marked. Both run in sync, so the abstract model meets everyday experience. The window view covers one hour of a summer afternoon (21 June, 14–15 h): the sun moves along that stretch of its path in the inset, the light patch on the floor shifts and the deck’s shadow passes the window, once.",
       "camera": "Overview → deck fades to transparent → push-in on one window → full-screen window view with a synced model inset",
       "graphics": "Transparent deck · window highlight · model inset · shared clock",
       "data": "Same sun data · one reference flat / window",
       "transition": "Out of the window, the whole day of light"
     },
     {
-      "code": "S8",
+      "code": "S9",
       "tier": "core",
       "sketch": "sun-hours",
       "title": "Quality of sunlight & wind",
@@ -130,14 +146,14 @@
       "scale": [
         "district"
       ],
-      "idea": "How much sun reaches the people who live here, below the Raumpark and on it. The whole of 20 March, the equinox and the usual day for daylight studies, merged into one picture: the streets, courtyards, roofs and the deck show how many hours of direct sun they get over the day, from sky blue (little) to light orange (sun all day). The shadows of the existing blocks, the deck and its volumes are all in it, so the shot shows where the new level keeps light for the city below and where it gains the best light on top. After about 8 s the sun picture gives way to the plain model and the wind, as still lines: from the west through the streets and over the deck, rising over the use volumes; behind each volume and each pylon the flow breaks up into turbulence and small eddies, showing where the Raumpark shelters and where it stirs the air.",
+      "idea": "How much sun reaches the people who live here, below the Raumpark and on it. The whole of 20 March, the equinox and the usual day for daylight studies, merged into one picture: the streets, courtyards, roofs and facades of the existing city, the deck and the Raumpark’s volumes (roofs and walls, instead of their use colours) show how many hours of direct sun they get over the day, from sky blue (little) to light orange (sun all day). The shadows of the existing blocks, the deck and its volumes are all in it, so the shot shows where the new level keeps light for the city below and where it gains the best light on top. After about 8 s the sun picture gives way to the plain model and the wind, as still lines: from the west through the streets and over the deck, rising over the use volumes; behind each volume and each pylon the flow breaks up into turbulence and small eddies, showing where the Raumpark shelters and where it stirs the air.",
       "camera": "Same isometric view, still; the camera drifts in slowly",
-      "graphics": "Sun hours on ground, roofs and deck · scale · then the plain model with still wind streamlines, wakes and eddies",
+      "graphics": "Sun hours on ground, roofs, facades, deck and the Raumpark’s volumes · scale · then the plain model with still wind streamlines, wakes and eddies",
       "data": "Sun position for Vienna on 20 March (calculated) · wind simulation (CFD) of the area with the Raumpark · 3D model",
       "transition": "Same camera, from light to energy"
     },
     {
-      "code": "S9",
+      "code": "S10",
       "tier": "core",
       "sketch": "solar",
       "title": "Greenery & solar income",
@@ -149,23 +165,7 @@
       "idea": "A diagram over the whole deck: a heat map of how much sun each part receives over the year, with the use volumes casting their shade. From it follows where planting thrives, where shade-loving planting belongs, and where PV pays off, with the share of each shown as bars.",
       "camera": "Top-down / isometric diagram, heat map sweeps in",
       "graphics": "Yearly sun on the deck in gold · PV on the roofs of the upper levels · scale",
-      "data": "Yearly sun on the deck (calculated) · planting and PV assumptions",
-      "transition": "Same camera, the model turns grey"
-    },
-    {
-      "code": "S10",
-      "tier": "core",
-      "sketch": "green-living",
-      "title": "Green space, housing & density",
-      "kicker": "Isometric · one quantity at a time, then the density",
-      "duration": 20,
-      "scale": [
-        "district"
-      ],
-      "idea": "What the Raumpark adds, in figures. The whole model turns grey and one quantity at a time is shown in colour, with its figure top right: first the green space the district has today (its parks), then the Raumpark's green added to it (the planted deck and the green volume), so the bar for green space grows; then the residential floors, storey by storey, in the existing blocks and in the Raumpark's housing. Last the density: the existing city turns neutral and the whole Raumpark lights up in one accent, while a graph shows the floor area of the district today and with the Raumpark stacked on top, with the increase in per cent.",
-      "camera": "Same isometric view, still",
-      "graphics": "Grey model · parks, then Raumpark green, then housing with storey lines in colour · figures as label + bar (placeholders) · density: city neutral, Raumpark in accent, bar graph today / with Raumpark, + %",
-      "data": "Green space today and with the Raumpark, residential floor area, population, gross floor area of the district today and with the Raumpark (from the research team; the sketch computes it from the schematic model)"
+      "data": "Yearly sun on the deck (calculated) · planting and PV assumptions"
     }
   ]
 }
